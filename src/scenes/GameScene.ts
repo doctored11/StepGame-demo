@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GameMap } from "../core/game/GameMap";
+import { TileSelector } from '../core/game/TileSelector'
 
 export class GameScene {
   private scene: THREE.Scene;
@@ -10,9 +11,12 @@ export class GameScene {
   private lastFrameTime: number;
   private gameMap!: GameMap;
 
+  private tileSelector!: TileSelector;
+
 
   constructor(container: HTMLElement) {
     this.container = container;
+    
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x202020);
@@ -26,6 +30,7 @@ export class GameScene {
     this.renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(this.renderer.domElement);
     this.createMap(10)
+    this.tileSelector = new TileSelector(this.camera, this.renderer, this.gameMap);
 
     const light = new THREE.DirectionalLight(0xffffff, 1);
     light.position.set(10, 10, 10);
@@ -67,4 +72,8 @@ export class GameScene {
     this.renderer.dispose();
     this.container.removeChild(this.renderer.domElement);
   }
+
+
+
+  
 }

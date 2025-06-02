@@ -157,4 +157,8 @@ export class GameMap {
       tile.addToScene(scene);
     }
   }
+
+  public getAllTiles(): Tile[] {
+    return Array.from(this.tilesById.values());
+  }
 }

@@ -57,9 +57,26 @@ export class Tile {
     return this.walkable;
   }
 
+  public select() {
+    const mat = this.mesh.material as THREE.MeshStandardMaterial;
+    mat.color.set(0xaa00ff);
+  }
+
+  //todo вынести колористику
+  public deselect() {
+    const mat = this.mesh.material as THREE.MeshStandardMaterial;
+    const sum = Math.floor(this.position.x) + Math.floor(this.position.z);
+
+    const color = sum % 2 === 0 ? 0xffffff : 0x4444;
+    mat.color.set(color);
+  }
+
   public removeFromScene(scene: THREE.Scene) {
     scene.remove(this.mesh);
     this.mesh.geometry.dispose();
     (this.mesh.material as THREE.Material).dispose();
+  }
+  public getMesh(): THREE.Mesh {
+    return this.mesh;
   }
 }
