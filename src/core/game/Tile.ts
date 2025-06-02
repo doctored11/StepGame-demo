@@ -9,7 +9,7 @@ export class Tile {
   public height: number;
 
   public mesh: THREE.Mesh;
-  private walkable: boolean = true;
+  public walkable: boolean = false;
 
   constructor(id: TileId, position: THREE.Vector3, height: number = 1) {
     this.id = id;
@@ -38,10 +38,10 @@ export class Tile {
     scene.add(this.mesh);
   }
 
-  public setHighlight(active: boolean) {
+  public setHighlight(active: boolean, color = 0x00ff00 ) {
     const mat = this.mesh.material as THREE.MeshStandardMaterial;
     if (active) {
-      mat.emissive.set(0x00ff00);
+      mat.emissive.set(color);
     } else {
       mat.emissive.set(0x000000);
     }
@@ -57,9 +57,9 @@ export class Tile {
     return this.walkable;
   }
 
-  public select() {
+  public select(color = 0xaa00ff) {
     const mat = this.mesh.material as THREE.MeshStandardMaterial;
-    mat.color.set(0xaa00ff);
+    mat.color.set(color);
   }
 
   //todo вынести колористику
