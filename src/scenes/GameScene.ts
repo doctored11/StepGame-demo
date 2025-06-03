@@ -3,6 +3,8 @@ import { GameMap } from "../core/game/GameMap";
 import { TileSelector } from "../core/game/TileSelector";
 import { Player } from "../core/game/Player";
 import { GameMaster } from "../core/game/GameMaster";
+import { TileFactory } from "../core/game/TileFactory";
+import { Tile } from "../core/game/Tile";
 
 type Callbacks = {
   getDiceValue: () => number;
@@ -14,10 +16,12 @@ export class GameScene {
   private scene: THREE.Scene;
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
+
   private container: HTMLElement;
   private animationId?: number;
   private lastFrameTime: number;
   private gameMap!: GameMap;
+  private tileFactory: TileFactory;
 
   private player!: Player;
   private gameMaster!: GameMaster;
@@ -39,81 +43,85 @@ export class GameScene {
 
     const aspect = container.clientWidth / container.clientHeight;
     this.camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
-    this.camera.position.set(6, 15, 6);
-    this.camera.lookAt(6, 0, 6);
+    this.camera.position.set(3, 5, 3);
+    this.camera.lookAt(3, 0, 3);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(container.clientWidth, container.clientHeight);
+
+    this.renderer.toneMapping = THREE.NoToneMapping;
+
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+
     container.appendChild(this.renderer.domElement);
-    this.createMap(10);
 
-    const startTile = this.gameMap.getTileById(1); //todo внести потом рандом
-    if (startTile) {
-      this.player = new Player(startTile);
-      console.log(this.player);
-    } else console.error("010");
-    this.scene.add(this.player.mesh);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 4);
+    this.scene.add(ambientLight);
 
-    this.tileSelector = new TileSelector(
-      this.camera,
-      this.renderer,
-      this.gameMap,
-    //   this.player
-    );
-    this.gameMaster = new GameMaster(
-      this.gameMap,
-      this.player,
-    //   this.getDiceValue,
-      () => {
-        this.setCanRoll(true);
-        this.addLog("Ход завершён, можно бросать кубик");
-      }
-    );
+    const dirLight = new THREE.DirectionalLight(0xbbffaa, 3);
+    dirLight.position.set(5, 3, -2);
+    dirLight.castShadow = true;
+    this.scene.add(dirLight);
 
-    this.tileSelector.setOnTileSelectedCallback((tile) => {
-      if (!this.gameMaster.canMoveTo(tile)) {
-        console.log("Ход на эту клетку невозможен");
-        return;
-      }
-      this.gameMaster.onTileSelected(tile);
-    });
-
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(10, 10, 10);
-    this.scene.add(light);
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-
-    const geometry = new THREE.PlaneGeometry(90, 50);
-    const material = new THREE.MeshStandardMaterial({ color: 0x3333aa });
-    const plane = new THREE.Mesh(geometry, material);
-    plane.rotation.x = -Math.PI / 2;
-    this.scene.add(plane);
+    this.tileFactory = new TileFactory();
+    this.initializeAsync();
 
     this.lastFrameTime = performance.now();
     this.animate();
   }
 
-   public startTurnWithDiceValue(diceValue: number) {
-    this.gameMaster.startTurn(diceValue); 
+  private async initializeAsync() {
+    await this.tileFactory.loadAll("/assets/models/tiles/");
+
+    this.gameMap = new GameMap(this.scene, this.tileFactory, 1);
+    this.gameMap.generateGrid(7, 7);
+    this.gameMap.addToScene(this.scene);
+
+    const startTile = this.gameMap.getTileById(1); //todo порандомить
+    if (!startTile) throw new Error("не удалось найти тайл id=1");
+    this.player = new Player(startTile);
+    this.scene.add(this.player.mesh);
+
+    this.tileSelector = new TileSelector(
+      this.camera,
+      this.renderer,
+      this.gameMap
+    );
+
+    this.tileSelector.setOnTileSelectedCallback((tile) => {
+      if (!this.gameMaster.canMoveTo(tile)) {
+        console.log("Нельзя ходить на эту клетку");
+        return;
+      }
+      this.gameMaster.onTileSelected(tile);
+    });
+
+    this.gameMaster = new GameMaster(
+      this.gameMap,
+      this.player,
+      () => {
+        this.setCanRoll(true);
+        this.addLog("Ход завершён, можно бросить кубик");
+          this.gameMap.getAllTiles().forEach((t) => t.disableGlow());
+      },
+      (reachableTiles: Tile[]) => {
+        this.gameMap.getAllTiles().forEach((t) => t.disableGlow());
+        reachableTiles.forEach((t) => t.enableGlow());
+      }
+    );
+
+    this.gameMaster.updateReachableTiles();
+  }
+
+  public startTurnWithDiceValue(diceValue: number) {
+    this.gameMaster.startTurn(diceValue);
   }
 
   private animate = () => {
-    const now = performance.now();
-    const delta = (now - this.lastFrameTime) / 1000;
-    this.lastFrameTime = now;
-
-    this.update(delta);
-    this.renderer.render(this.scene, this.camera);
     this.animationId = requestAnimationFrame(this.animate);
+
+    this.renderer.render(this.scene, this.camera);
   };
-
-  private update(delta: number) {}
-
-  public createMap(size: number) {
-    this.gameMap = new GameMap();
-    this.gameMap.generateGrid(size, size);
-    this.gameMap.addToScene(this.scene);
-  }
 
   public dispose() {
     if (this.animationId !== undefined) {
