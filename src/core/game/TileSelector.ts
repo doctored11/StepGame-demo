@@ -13,8 +13,7 @@ export class TileSelector {
   constructor(
     private camera: THREE.Camera,
     private renderer: THREE.WebGLRenderer,
-    private gameMap: GameMap,
-    // private player: Player,
+    private gameMap: GameMap
   ) {
     this.setupInput();
   }
@@ -23,10 +22,11 @@ export class TileSelector {
     this.onTileSelectedCallback = callback;
   }
 
+
+
   private setupInput() {
     window.addEventListener("click", this.onClick);
   }
-
   private onClick = (event: MouseEvent) => {
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -34,22 +34,29 @@ export class TileSelector {
 
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
-    const tileMeshes = this.gameMap.getAllTiles().map((t) => t.getMesh());
-    const intersects = this.raycaster.intersectObjects(tileMeshes);
+    //просто добавил коллайдер шапочку
 
-    if (intersects.length > 0) {
-      const hit = intersects[0].object;
-      const tile = this.gameMap.getAllTiles().find((t) => t.getMesh() === hit);
-      if (!tile) return;
+    const colliders = this.gameMap.getAllTiles().map((t) => t.collider);
+    const intersects = this.raycaster.intersectObjects(colliders, false);
 
-      if (tile !== this.selectedTile) {
-        if (this.selectedTile) this.selectedTile.deselect();
+    if (intersects.length === 0) return;
 
-        tile.select();
-        this.selectedTile = tile;
+    const closestHit = intersects[0];
 
-        this.onTileSelectedCallback?.(tile);
-      }
+    let tile: Tile | undefined = undefined;
+
+    tile = this.gameMap
+      .getAllTiles()
+      .find((t) => t.collider === closestHit.object);
+
+    if (!tile) return;
+
+    if (tile !== this.selectedTile) {
+      if (this.selectedTile) this.selectedTile.deselect();
+
+      tile.select();
+      this.selectedTile = tile;
+      this.onTileSelectedCallback?.(tile);
     }
   };
 

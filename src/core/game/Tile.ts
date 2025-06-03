@@ -8,8 +8,16 @@ export class Tile {
   public neighbors: TileId[];
   public height: number;
 
-  public mesh: THREE.Mesh;
+  public object: THREE.Object3D;
   public walkable: boolean = false;
+
+  public collider: THREE.Mesh;
+  private originalMaterials: Map<
+    THREE.Mesh,
+    THREE.Material | THREE.Material[]
+  > = new Map();
+
+  private highlightLight?: THREE.PointLight;
 
   constructor(id: TileId, position: THREE.Vector3, height: number = 1) {
     this.id = id;
@@ -17,15 +25,40 @@ export class Tile {
     this.height = height;
     this.neighbors = [];
 
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const sum = Math.floor(position.x) + Math.floor(position.z);
-    const color = sum % 2 === 0 ? 0xffffff : 0x4444;
-    const material = new THREE.MeshStandardMaterial({ color });
-    this.mesh = new THREE.Mesh(geometry, material);
+    
 
-    this.mesh.position.set(position.x, 0.5, position.z);
-    this.mesh.receiveShadow = true;
-    this.mesh.castShadow = false;
+    this.object = new THREE.Object3D();
+    this.object.position.copy(position);
+
+    const geom = new THREE.BoxGeometry(1, 0.1, 1);
+    const mat = new THREE.MeshBasicMaterial({ visible: false });
+    this.collider = new THREE.Mesh(geom, mat);
+    this.collider.position.set(position.x, 0.05, position.z); //тут подумать
+  }
+
+  public setObject3D(obj: THREE.Object3D) {
+    this.object = obj;
+    this.object.position.copy(this.position);
+
+    const highlight = obj.clone();
+    highlight.name = "highlight";
+
+    highlight.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        mesh.material = new THREE.MeshBasicMaterial({
+          color: 0x00ff00,
+          transparent: true,
+          opacity: 0.4,
+          depthWrite: false,
+        });
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
+      }
+    });
+
+    highlight.visible = false;
+    this.object.add(highlight);
   }
 
   public addNeighbor(tileId: TileId) {
@@ -35,48 +68,75 @@ export class Tile {
   }
 
   public addToScene(scene: THREE.Scene) {
-    scene.add(this.mesh);
+    scene.add(this.object);
+    scene.add(this.collider);
   }
 
-  public setHighlight(active: boolean, color = 0x00ff00 ) {
-    const mat = this.mesh.material as THREE.MeshStandardMaterial;
-    if (active) {
-      mat.emissive.set(color);
-    } else {
-      mat.emissive.set(0x000000);
+  setHighlight(active: boolean, color = 0x00ff00) {
+    console.log("хайлайт");
+    const highlightObj = this.object.getObjectByName("highlight");
+    if (highlightObj) {
+      highlightObj.visible = active;
+
+      highlightObj.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          (
+            (child as THREE.Mesh).material as THREE.MeshBasicMaterial
+          ).color.setHex(color);
+        }
+      });
     }
   }
 
   public setWalkable(value: boolean) {
     this.walkable = value;
-    const mat = this.mesh.material as THREE.MeshStandardMaterial;
-    mat.color.set(value ? 0x228833 : 0x882222);
   }
 
   public isWalkable(): boolean {
     return this.walkable;
   }
 
-  public select(color = 0xaa00ff) {
-    const mat = this.mesh.material as THREE.MeshStandardMaterial;
-    mat.color.set(color);
+  public enableGlow() {
+    this.object.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        if (!this.originalMaterials.has(mesh)) {
+          this.originalMaterials.set(mesh, mesh.material);
+        }
+        const oldMat = mesh.material as THREE.MeshStandardMaterial;
+
+        const glowMat = new THREE.MeshBasicMaterial({
+          map: oldMat.map || null,
+          color: oldMat.color.clone().multiplyScalar(3),
+          
+        });
+        mesh.material = glowMat;
+      }
+    });
+  }
+
+  public disableGlow() {
+    this.object.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        const orig = this.originalMaterials.get(mesh);
+        if (orig) {
+          mesh.material = orig;
+        }
+      }
+    });
+    this.originalMaterials.clear();
+  }
+  public select() {
+    this.setHighlight(true);
   }
 
   //todo вынести колористику
   public deselect() {
-    const mat = this.mesh.material as THREE.MeshStandardMaterial;
-    const sum = Math.floor(this.position.x) + Math.floor(this.position.z);
-
-    const color = sum % 2 === 0 ? 0xffffff : 0x4444;
-    mat.color.set(color);
+    this.setHighlight(false);
   }
 
-  public removeFromScene(scene: THREE.Scene) {
-    scene.remove(this.mesh);
-    this.mesh.geometry.dispose();
-    (this.mesh.material as THREE.Material).dispose();
-  }
-  public getMesh(): THREE.Mesh {
-    return this.mesh;
+  public getObject3D(): THREE.Object3D {
+    return this.object;
   }
 }

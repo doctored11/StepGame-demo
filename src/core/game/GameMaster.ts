@@ -2,7 +2,6 @@ import { GameMap } from "./GameMap";
 import { Player } from "./Player";
 import { Tile } from "./Tile";
 
-
 export class GameMaster {
   private reachableTiles: Set<Tile> = new Set();
   private isTurnInProgress: boolean = false;
@@ -12,22 +11,27 @@ export class GameMaster {
     private gameMap: GameMap,
     private player: Player,
     // private getDiceValue: () => number | null,
-    private onTurnComplete: () => void
+    private onTurnComplete: () => void,
+    private onReachablesChanged: (tiles: Tile[]) => void
   ) {
     // this.updateReachableTiles();
+    this.updateReachableTiles();
   }
   //
- 
 
   updateReachableTiles() {
     for (const tile of this.gameMap.getAllTiles()) {
       //снятие подсветки со всех полей - todo снимать не со всех а с предыдущих
-      tile.walkable = false;
+      tile.setWalkable(false);
       tile.setHighlight(false);
     }
 
-     const diceValue = this.currentDiceValue;
-    if (diceValue === null) return;
+    const diceValue = this.currentDiceValue;
+    if (diceValue === null) {
+      this.reachableTiles.clear();
+      this.onReachablesChanged([]);
+      return;
+    }
     console.warn(diceValue);
 
     const reachable = this.findReachableTiles(
@@ -35,12 +39,13 @@ export class GameMaster {
       diceValue
     );
 
-    reachable.forEach((tile) => {
-      tile.walkable = true;
-      tile.setHighlight(true);
-    });
-
     this.reachableTiles = new Set(reachable);
+    for (const t of reachable) {
+      t.setWalkable(true);
+    }
+
+    this.onReachablesChanged(Array.from(this.reachableTiles));
+
   }
 
   startTurn(diceValue: number) {
