@@ -171,11 +171,11 @@ export class GameMap {
       tile.addToScene(scene);
 
       //для дебага
-      // const boxHelper = new THREE.BoxHelper(tile.object, 0xff0000);
-      // scene.add(boxHelper);
+      const boxHelper = new THREE.BoxHelper(tile.object, 0xff0000);
+      scene.add(boxHelper);
 
-      // const axesHelper = new THREE.AxesHelper(0.5); // 0.5 — длина осей
-      // tile.object.add(axesHelper);
+      const axesHelper = new THREE.AxesHelper(0.5); // 0.5 — длина осей
+      tile.object.add(axesHelper);
     }
   }
 

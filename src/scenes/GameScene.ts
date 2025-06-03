@@ -82,24 +82,12 @@ export class GameScene {
     this.player = new Player(startTile);
     this.scene.add(this.player.mesh);
 
-    this.gameMaster = new GameMaster(
-      this.gameMap,
-      this.player,
-      () => {
-        this.setCanRoll(true);
-        this.addLog("Ход завершён, можно бросить кубик");
-      },
-      (reachableTiles: Tile[]) => {
-        this.gameMap.getAllTiles().forEach((t) => t.disableGlow());
-        reachableTiles.forEach((t) => t.enableGlow());
-      }
-    );
-
     this.tileSelector = new TileSelector(
       this.camera,
       this.renderer,
       this.gameMap
     );
+
     this.tileSelector.setOnTileSelectedCallback((tile) => {
       if (!this.gameMaster.canMoveTo(tile)) {
         console.log("Нельзя ходить на эту клетку");
@@ -107,6 +95,20 @@ export class GameScene {
       }
       this.gameMaster.onTileSelected(tile);
     });
+
+    this.gameMaster = new GameMaster(
+      this.gameMap,
+      this.player,
+      () => {
+        this.setCanRoll(true);
+        this.addLog("Ход завершён, можно бросить кубик");
+          this.gameMap.getAllTiles().forEach((t) => t.disableGlow());
+      },
+      (reachableTiles: Tile[]) => {
+        this.gameMap.getAllTiles().forEach((t) => t.disableGlow());
+        reachableTiles.forEach((t) => t.enableGlow());
+      }
+    );
 
     this.gameMaster.updateReachableTiles();
   }

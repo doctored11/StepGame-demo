@@ -45,7 +45,6 @@ export class GameMaster {
     }
 
     this.onReachablesChanged(Array.from(this.reachableTiles));
-
   }
 
   startTurn(diceValue: number) {
@@ -80,8 +79,9 @@ export class GameMaster {
         }
       }
     }
+    // console.log("🐣 ", result);
 
-    return result;
+    return result.filter((t) => t !== startTile); //да костыль - при выбросе именно 2 был ход под себя
   }
 
   canMoveTo(tile: Tile): boolean {

@@ -52,18 +52,19 @@ export class TileSelector {
     if (!tile) return;
 
     if (tile !== this.selectedTile) {
-      if (this.selectedTile) this.selectedTile.deselect();
+      // if (this.selectedTile) this.selectedTile.deselect();
 
-      tile.select();
+      // tile.select();
+      
       this.selectedTile = tile;
       this.onTileSelectedCallback?.(tile);
     }
   };
 
-  public clearSelection() {
-    if (this.selectedTile) {
-      this.selectedTile.deselect();
-      this.selectedTile = null;
-    }
-  }
+  // public clearSelection() {
+  //   if (this.selectedTile) {
+  //     this.selectedTile.deselect();
+  //     this.selectedTile = null;
+  //   }
+  // }
 }

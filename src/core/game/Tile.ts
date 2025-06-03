@@ -30,10 +30,10 @@ export class Tile {
     this.object = new THREE.Object3D();
     this.object.position.copy(position);
 
-    const geom = new THREE.BoxGeometry(1, 0.1, 1);
-    const mat = new THREE.MeshBasicMaterial({ visible: false });
+    const geom = new THREE.BoxGeometry(0.9, 1.2, 0.9);
+    const mat = new THREE.MeshBasicMaterial({ visible: false }); //true для дебага колизии 
     this.collider = new THREE.Mesh(geom, mat);
-    this.collider.position.set(position.x, 0.05, position.z); //тут подумать
+    this.collider.position.set(position.x, -0.4, position.z); //тут подумать
   }
 
   public setObject3D(obj: THREE.Object3D) {
@@ -73,7 +73,7 @@ export class Tile {
   }
 
   setHighlight(active: boolean, color = 0x00ff00) {
-    console.log("хайлайт");
+    console.log("хайлайт", active);
     const highlightObj = this.object.getObjectByName("highlight");
     if (highlightObj) {
       highlightObj.visible = active;
@@ -127,14 +127,17 @@ export class Tile {
     });
     this.originalMaterials.clear();
   }
-  public select() {
-    this.setHighlight(true);
-  }
+  // public select() {
+  //   // this.enableGlow();
+  //   this.setHighlight(true);
+  // }
 
-  //todo вынести колористику
-  public deselect() {
-    this.setHighlight(false);
-  }
+  // //todo вынести колористику
+  // public deselect() {
+  //   console.log("deselect")
+  //    this.disableGlow();
+  //   this.setHighlight(false);
+  // }
 
   public getObject3D(): THREE.Object3D {
     return this.object;
