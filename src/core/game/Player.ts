@@ -9,7 +9,7 @@ export class Player {
   constructor(startTile: Tile) {
     this.currentTile = startTile;
 
-    const geometry = new THREE.SphereGeometry(0.4, 16, 16);
+    const geometry = new THREE.SphereGeometry(0.3, 16, 16);
     const material = new THREE.MeshStandardMaterial({ color: 0xffd700 });
     this.mesh = new THREE.Mesh(geometry, material);
 
@@ -19,7 +19,7 @@ export class Player {
   private snapToCurrent() {
     this.mesh.position
       .copy(this.currentTile.position)
-      .add(new THREE.Vector3(0, 1.5, 0));
+      .add(new THREE.Vector3(0, 0.5, 0));
       console.log(this.mesh.position)
   }
 

@@ -43,8 +43,8 @@ export class GameScene {
 
     const aspect = container.clientWidth / container.clientHeight;
     this.camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
-    this.camera.position.set(4, 5, 4);
-    this.camera.lookAt(3, 2, 3);
+    this.camera.position.set(3, 5, 3);
+    this.camera.lookAt(3, 0, 3);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(container.clientWidth, container.clientHeight);

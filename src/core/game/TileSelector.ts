@@ -34,7 +34,7 @@ export class TileSelector {
 
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
-    //просто добавил коллайдер шапочку
+    //просто добавил коллайде
 
     const colliders = this.gameMap.getAllTiles().map((t) => t.collider);
     const intersects = this.raycaster.intersectObjects(colliders, false);

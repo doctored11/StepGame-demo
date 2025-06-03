@@ -18,37 +18,33 @@ export class GameMap {
   public generateGrid(width: number, height: number) {
     // Кольцо по краю
     for (let x = 0; x < width; x++) {
-      this.addTileAt(x, 0, TileType.STRAIGHT, TileRotation.ROT_270);
-      this.addTileAt(x, height - 1, TileType.STRAIGHT, TileRotation.ROT_90);
+      this.ensureTileAt(x, 0);
+      this.ensureTileAt(x, height - 1);
     }
-
     for (let z = 1; z < height - 1; z++) {
-      this.addTileAt(0, z, TileType.STRAIGHT, TileRotation.ROT_0);
-      this.addTileAt(width - 1, z, TileType.STRAIGHT, TileRotation.ROT_180);
+      this.ensureTileAt(0, z);
+      this.ensureTileAt(width - 1, z);
     }
 
-    // мосты по X
-    const verticalBridgeMaxCount = Math.floor(width / 5);
     const verticalBridges: number[] = [];
-    let chance = 0.2;
+    const horizontalBridges: number[] = [];
+    const verticalBridgeMaxCount = Math.floor(width / 5);
+    const horizontalBridgeCount = Math.floor(height / 5);
 
+    let chance = 0.2;
     for (let i = 0; i < verticalBridgeMaxCount; i++) {
       if (Math.random() < chance) {
-        chance += chance > 0.3 ? -0.3 : 0.3; //заменить
+        chance += chance > 0.3 ? -0.3 : 0.3;
         const line = chooseLine(width, verticalBridges, 1);
         if (line !== null) {
           verticalBridges.push(line);
-
           for (let z = 1; z < height - 1; z++) {
-            this.addTileAt(line, z, TileType.STRAIGHT, TileRotation.ROT_0);
+            this.ensureTileAt(line, z);
           }
         }
       }
       chance += 0.3;
     }
-
-    const horizontalBridgeCount = Math.floor(height / 5);
-    const horizontalBridges: number[] = [];
 
     for (let i = 0; i < horizontalBridgeCount; i++) {
       if (Math.random() < chance) {
@@ -57,7 +53,7 @@ export class GameMap {
         if (line !== null) {
           horizontalBridges.push(line);
           for (let x = 1; x < width - 1; x++) {
-            this.addTileAt(x, line, TileType.STRAIGHT, TileRotation.ROT_270);
+            this.ensureTileAt(x, line);
           }
         }
       }
@@ -71,6 +67,17 @@ export class GameMap {
       horizontalBridges
     );
 
+    for (const tile of this.tilesById.values()) {
+      const obj = this.tileFactory.createTileFromNeighbors(
+        tile.position.x / this.tileSize,
+        tile.position.z / this.tileSize,
+        this.getTileAt.bind(this)
+      );
+      obj.position.copy(tile.position);
+      this.scene.add(obj);
+      tile.object = obj;
+    }
+
     function chooseLine(
       maxIndex: number,
       existingLines: number[],
@@ -79,7 +86,6 @@ export class GameMap {
       const candidates: number[] = [];
       for (let i = 1; i < maxIndex - 1; i++) {
         if (i === 1 || i === maxIndex - 2) continue;
-
         if (existingLines.every((line) => Math.abs(line - i) > minGap)) {
           candidates.push(i);
         }
@@ -97,7 +103,6 @@ export class GameMap {
     horizontalBridges: number[] = []
   ) {
     const ringCoords: Array<[number, number]> = [];
-
     for (let x = 0; x < width; x++) ringCoords.push([x, 0]);
     for (let z = 1; z < height - 1; z++) ringCoords.push([width - 1, z]);
     for (let x = width - 1; x >= 0; x--) ringCoords.push([x, height - 1]);
@@ -126,23 +131,13 @@ export class GameMap {
     }
   }
 
-  public addTileAt(
-    x: number,
-    z: number,
-    type: TileType,
-    rotation: TileRotation
-  ) {
+  private ensureTileAt(x: number, z: number) {
+    const existing = this.getTileAt(x, z);
+    if (existing) return;
+
     const id = this.nextId++;
     const worldPos = new THREE.Vector3(x * this.tileSize, 0, z * this.tileSize);
-    console.log(worldPos);
-
-    const obj = this.tileFactory.createTileMesh(type, rotation);
-    obj.position.copy(worldPos);
-
-    this.scene.add(obj);
-
     const tile = new Tile(id, worldPos);
-    tile.object = obj; 
     tile.position.copy(worldPos);
 
     this.tilesById.set(id, tile);
@@ -169,13 +164,11 @@ export class GameMap {
   public addToScene(scene: THREE.Scene) {
     for (const tile of this.tilesById.values()) {
       tile.addToScene(scene);
-
-      //для дебага
-      const boxHelper = new THREE.BoxHelper(tile.object, 0xff0000);
-      scene.add(boxHelper);
-
-      const axesHelper = new THREE.AxesHelper(0.5); // 0.5 — длина осей
-      tile.object.add(axesHelper);
+      //
+      // const boxHelper = new THREE.BoxHelper(tile.object, 0xff0000);
+      // scene.add(boxHelper);
+      // const axesHelper = new THREE.AxesHelper(0.5);
+      // tile.object.add(axesHelper);
     }
   }
 
