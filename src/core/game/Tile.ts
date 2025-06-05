@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { Berry } from "./Berry";
 
 export type TileId = number;
 
@@ -10,6 +11,7 @@ export class Tile {
 
   public object: THREE.Object3D;
   public walkable: boolean = false;
+  public berry: Berry | null = null;
 
   public collider: THREE.Mesh;
   private originalMaterials: Map<
@@ -17,7 +19,6 @@ export class Tile {
     THREE.Material | THREE.Material[]
   > = new Map();
 
-  private highlightLight?: THREE.PointLight;
 
   constructor(id: TileId, position: THREE.Vector3, height: number = 1) {
     this.id = id;
@@ -25,13 +26,11 @@ export class Tile {
     this.height = height;
     this.neighbors = [];
 
-    
-
     this.object = new THREE.Object3D();
     this.object.position.copy(position);
 
     const geom = new THREE.BoxGeometry(0.9, 1.2, 0.9);
-    const mat = new THREE.MeshBasicMaterial({ visible: false }); //true для дебага колизии 
+    const mat = new THREE.MeshBasicMaterial({ visible: false }); //true для дебага колизии
     this.collider = new THREE.Mesh(geom, mat);
     this.collider.position.set(position.x, -0.4, position.z); //тут подумать
   }
@@ -108,7 +107,6 @@ export class Tile {
         const glowMat = new THREE.MeshBasicMaterial({
           map: oldMat.map || null,
           color: oldMat.color.clone().multiplyScalar(3),
-          
         });
         mesh.material = glowMat;
       }
@@ -141,5 +139,10 @@ export class Tile {
 
   public getObject3D(): THREE.Object3D {
     return this.object;
+  }
+
+  public isFree(occupiedTiles: Set<string>): boolean {
+    const key = `${this.position.x},${this.position.z}`;
+    return !occupiedTiles.has(key);
   }
 }

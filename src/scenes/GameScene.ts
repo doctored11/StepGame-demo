@@ -5,6 +5,8 @@ import { Player } from "../core/game/Player";
 import { GameMaster } from "../core/game/GameMaster";
 import { TileFactory } from "../core/game/TileFactory";
 import { Tile } from "../core/game/Tile";
+import { Berry } from "../core/game/Berry";
+import { BerryFactory } from "../core/game/BerryFactory";
 
 type Callbacks = {
   getDiceValue: () => number;
@@ -22,10 +24,13 @@ export class GameScene {
   private lastFrameTime: number;
   private gameMap!: GameMap;
   private tileFactory: TileFactory;
+  private berryFactory: BerryFactory;
 
   private player!: Player;
   private gameMaster!: GameMaster;
   private tileSelector!: TileSelector;
+
+  private berries: Set<Berry> = new Set();
 
   private getDiceValue: () => number;
   private addLog: (msg: string) => void;
@@ -43,7 +48,7 @@ export class GameScene {
 
     const aspect = container.clientWidth / container.clientHeight;
     this.camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
-    this.camera.position.set(3, 5, 3);
+    this.camera.position.set(3, 4, 6);
     this.camera.lookAt(3, 0, 3);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -64,6 +69,7 @@ export class GameScene {
     this.scene.add(dirLight);
 
     this.tileFactory = new TileFactory();
+    this.berryFactory = new BerryFactory();
     this.initializeAsync();
 
     this.lastFrameTime = performance.now();
@@ -72,15 +78,31 @@ export class GameScene {
 
   private async initializeAsync() {
     await this.tileFactory.loadAll("/assets/models/tiles/");
+    await this.berryFactory.loadAll([
+      "/assets/models/berry_1.glb",
+      "/assets/models/berry_2.glb",
+      "/assets/models/berry_3.glb",
+    ]);
 
-    this.gameMap = new GameMap(this.scene, this.tileFactory, 1);
+    this.gameMap = new GameMap(
+      this.scene,
+      this.tileFactory,
+      this.berryFactory,
+      1
+    );
+
     this.gameMap.generateGrid(7, 7);
     this.gameMap.addToScene(this.scene);
 
     const startTile = this.gameMap.getTileById(1); //todo порандомить
+
     if (!startTile) throw new Error("не удалось найти тайл id=1");
     this.player = new Player(startTile);
     this.scene.add(this.player.mesh);
+    this.gameMap.occupyTile(startTile.position.x, startTile.position.z);
+
+    const firstBerry = this.gameMap.spawnBerry();
+    // if (firstBerry) this.berries.add(firstBerry);
 
     this.tileSelector = new TileSelector(
       this.camera,
@@ -102,7 +124,7 @@ export class GameScene {
       () => {
         this.setCanRoll(true);
         this.addLog("Ход завершён, можно бросить кубик");
-          this.gameMap.getAllTiles().forEach((t) => t.disableGlow());
+        this.gameMap.getAllTiles().forEach((t) => t.disableGlow());
       },
       (reachableTiles: Tile[]) => {
         this.gameMap.getAllTiles().forEach((t) => t.disableGlow());
@@ -119,6 +141,17 @@ export class GameScene {
 
   private animate = () => {
     this.animationId = requestAnimationFrame(this.animate);
+    if (!this.gameMap) return;
+    const now = performance.now();
+    const delta = (now - this.lastFrameTime) / 1000;
+    this.lastFrameTime = now;
+
+    // this.player.update(delta); //todo унаследовать от анимации и добавить модели
+
+   
+    this.gameMap.getAllBerries().forEach((berry) => {
+      berry.update(delta);
+    });
 
     this.renderer.render(this.scene, this.camera);
   };

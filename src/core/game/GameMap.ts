@@ -3,6 +3,8 @@ import * as THREE from "three";
 import { Tile, TileId } from "./Tile";
 import { TileFactory } from "./TileFactory";
 import { TileRotation, TileType } from "./TileType";
+import { Berry } from "./Berry";
+import { BerryFactory } from "./BerryFactory";
 
 export class GameMap {
   private tilesById: Map<TileId, Tile> = new Map();
@@ -12,8 +14,12 @@ export class GameMap {
   constructor(
     private scene: THREE.Scene,
     private tileFactory: TileFactory,
+    private berryFactory: BerryFactory,
     private tileSize: number = 1
   ) {}
+
+  private berries: Set<Berry> = new Set();
+  private occupiedTiles: Set<string> = new Set();
 
   public generateGrid(width: number, height: number) {
     // Кольцо по краю
@@ -165,14 +171,68 @@ export class GameMap {
     for (const tile of this.tilesById.values()) {
       tile.addToScene(scene);
       //
-      // const boxHelper = new THREE.BoxHelper(tile.object, 0xff0000);
-      // scene.add(boxHelper);
-      // const axesHelper = new THREE.AxesHelper(0.5);
-      // tile.object.add(axesHelper);
+      const boxHelper = new THREE.BoxHelper(tile.object, 0xff0000);
+      scene.add(boxHelper);
+      const axesHelper = new THREE.AxesHelper(0.5);
+      tile.object.add(axesHelper);
     }
   }
 
   public getAllTiles(): Tile[] {
     return Array.from(this.tilesById.values());
+  }
+  public getFreeTiles(): Tile[] {
+    return this.getAllTiles().filter((tile) => tile.isFree(this.occupiedTiles));
+  }
+  //методы маркировки полей как занятых
+  public occupyTile(x: number, z: number) {
+    this.occupiedTiles.add(`${x},${z}`);
+  }
+
+  public freeTile(x: number, z: number) {
+    this.occupiedTiles.delete(`${x},${z}`);
+  }
+
+  //
+ //todo -возмодно вынести в мастер - подумать
+  public spawnBerry(): Berry | null {
+    const freeTiles = this.getFreeTiles(); 
+    if (freeTiles.length === 0) return null;
+
+    const randIdx = Math.floor(Math.random() * freeTiles.length);
+    const tile = freeTiles[randIdx];
+
+    const frames = this.berryFactory.createFrames();
+
+  
+    const berryWorldPos = new THREE.Vector3(
+      tile.position.x,
+      tile.position.y + 0.5,
+      tile.position.z
+    );
+
+    const berry = new Berry(berryWorldPos, frames, this.scene);
+
+    this.occupyTile(Math.round(tile.position.x), Math.round(tile.position.z));
+
+    tile.berry = berry;
+
+    this.berries.add(berry);
+
+    return berry;
+  }
+ 
+  public removeBerryAtTile(tile: Tile) {
+    if (!tile.berry) return;
+    const berry = tile.berry;
+    berry.collect();
+    this.berries.delete(berry);
+    tile.berry = null;
+    this.freeTile(tile.position.x, tile.position.z);
+
+    this.spawnBerry(); //возможно вынести но пока так)
+  }
+  public getAllBerries(): Berry[] {
+    return Array.from(this.berries);
   }
 }

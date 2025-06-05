@@ -14,7 +14,6 @@ export class GameMaster {
     private onTurnComplete: () => void,
     private onReachablesChanged: (tiles: Tile[]) => void
   ) {
-    // this.updateReachableTiles();
     this.updateReachableTiles();
   }
   //
@@ -100,6 +99,7 @@ export class GameMaster {
 
     this.movePlayerToTile(tile);
 
+    this.gameMap.removeBerryAtTile(tile);
     this.updateReachableTiles();
 
     this.endTurn();
