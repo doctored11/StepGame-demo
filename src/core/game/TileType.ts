@@ -1,7 +1,6 @@
 
 export type TileId = number;
 
-//идея в хранение состояний и потом подмене меша полю - а не создавать отдельные классы под каждый меш 
 export enum TileType {
   STRAIGHT = "straight",      
   TURN = "turn",              

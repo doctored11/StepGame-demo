@@ -1,31 +1,54 @@
 import * as THREE from "three";
 import { Tile } from "./Tile";
 import { GameMap } from "./GameMap";
+import { AnimatedEntity } from "./AnimatedEntity";
 
-export class Player {
-  public mesh: THREE.Mesh;
+export class Player extends AnimatedEntity {
   public currentTile: Tile;
 
-  constructor(startTile: Tile) {
-    this.currentTile = startTile;
+  private path: THREE.Vector3[] = [];
+  private moveSpeed = 5;
 
-    const geometry = new THREE.SphereGeometry(0.3, 16, 16);
-    const material = new THREE.MeshStandardMaterial({ color: 0xffd700 });
-    this.mesh = new THREE.Mesh(geometry, material);
+  constructor(startTile: Tile, frames: THREE.Object3D[]) {
+    super(
+      startTile.position.clone().add(new THREE.Vector3(0, 0.5, 0)),
+      frames,
+      5
+    );
+    this.getObject3D().rotation.y += Math.PI;
+
+    this.currentTile = startTile;
 
     this.snapToCurrent();
   }
 
   private snapToCurrent() {
-    this.mesh.position
-      .copy(this.currentTile.position)
+    this.getObject3D()
+      .position.copy(this.currentTile.position)
       .add(new THREE.Vector3(0, 0.5, 0));
-      console.log(this.mesh.position)
+    console.log(this.getObject3D().position);
   }
 
   public setTile(tile: Tile) {
     this.currentTile = tile;
     this.snapToCurrent();
+  }
+
+  public moveAlongTiles(tiles: Tile[]): Promise<void> {
+    if (tiles.length === 0) return Promise.resolve();
+    this.path = tiles.map((t) =>
+      t.position.clone().add(new THREE.Vector3(0, 0.5, 0))
+    );
+    this.orientTo(this.path[0]);
+    return new Promise((resolve) => {
+      (this as any)._onPathComplete = resolve;
+    });
+  }
+
+  private orientTo(target: THREE.Vector3) {
+    const dir = target.clone().sub(this.getObject3D().position);
+    const angle = Math.atan2(dir.x, dir.z);
+    this.getObject3D().rotation.y = angle+Math.PI;
   }
 
   public reachableTiles(map: GameMap, maxSteps = 3): Tile[] {
@@ -48,5 +71,30 @@ export class Player {
       }
     }
     return result;
+  }
+
+  public override update(delta: number): void {
+    super.update(delta);
+
+    if (this.path.length > 0) {
+      const root = this.getObject3D();
+      const target = this.path[0];
+      const dir = target.clone().sub(root.position);
+      const dist = dir.length();
+
+      if (dist <= this.moveSpeed * delta) {
+        root.position.copy(target);
+        this.path.shift();
+        if (this.path.length > 0) {
+          this.orientTo(this.path[0]);
+        } else {
+          const resolve = (this as any)._onPathComplete;
+          if (resolve) resolve();
+        }
+      } else {
+        dir.normalize();
+        root.position.add(dir.multiplyScalar(this.moveSpeed * delta));
+      }
+    }
   }
 }

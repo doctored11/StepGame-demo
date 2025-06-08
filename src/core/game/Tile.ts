@@ -125,17 +125,7 @@ export class Tile {
     });
     this.originalMaterials.clear();
   }
-  // public select() {
-  //   // this.enableGlow();
-  //   this.setHighlight(true);
-  // }
 
-  // //todo вынести колористику
-  // public deselect() {
-  //   console.log("deselect")
-  //    this.disableGlow();
-  //   this.setHighlight(false);
-  // }
 
   public getObject3D(): THREE.Object3D {
     return this.object;

@@ -10,7 +10,6 @@ export class GameMaster {
   constructor(
     private gameMap: GameMap,
     private player: Player,
-    // private getDiceValue: () => number | null,
     private onTurnComplete: () => void,
     private onReachablesChanged: (tiles: Tile[]) => void,
     private onAddScorePoint: () => void
@@ -21,7 +20,6 @@ export class GameMaster {
 
   updateReachableTiles() {
     for (const tile of this.gameMap.getAllTiles()) {
-      //снятие подсветки со всех полей - todo снимать не со всех а с предыдущих
       tile.setWalkable(false);
       tile.setHighlight(false);
     }
@@ -47,7 +45,7 @@ export class GameMaster {
     this.onReachablesChanged(Array.from(this.reachableTiles));
   }
 
-  startTurn(diceValue: number) {
+  public startTurn(diceValue: number) {
     this.currentDiceValue = diceValue;
     this.isTurnInProgress = true;
 
@@ -84,12 +82,45 @@ export class GameMaster {
     return result.filter((t) => t !== startTile); //да костыль - при выбросе именно 2 был ход под себя
   }
 
+ 
+  private findPath(startTile: Tile, endTile: Tile): Tile[] {
+    // с сохр предков
+    const queue: Tile[] = [startTile];
+    const cameFrom = new Map<Tile, Tile | null>();
+    cameFrom.set(startTile, null);
+
+    while (queue.length > 0) {
+      const tile = queue.shift()!;
+      if (tile === endTile) break;
+
+      for (const nid of tile.neighbors) {
+        const neigh = this.gameMap.getTileById(nid);
+        if (neigh && !cameFrom.has(neigh)) {
+          cameFrom.set(neigh, tile);
+          queue.push(neigh);
+        }
+      }
+    }
+
+    if (!cameFrom.has(endTile)) {
+      return [];
+    }
+
+    const path: Tile[] = [];
+    let cur: Tile | null = endTile;
+    while (cur && cur !== startTile) {
+      path.push(cur);
+      cur = cameFrom.get(cur)!;
+    }
+    return path.reverse();
+  }
+
   canMoveTo(tile: Tile): boolean {
     return this.reachableTiles.has(tile);
   }
 
   onTileSelected(tile: Tile) {
-    if (!this.isTurnInProgress) {
+    if (!this.isTurnInProgress ) {
       console.log("Ход не начат — подожди броска кубика");
       return;
     }
@@ -98,13 +129,22 @@ export class GameMaster {
       return;
     }
 
-    this.movePlayerToTile(tile);
-
-    if (this.gameMap.removeBerryAtTile(tile)) this.onAddScorePoint();
+    const path = this.findPath(this.player.currentTile, tile);
+    this.isTurnInProgress = false;
 
     this.updateReachableTiles();
-
-    this.endTurn();
+    this.player.moveAlongTiles(path).then(() => {
+      this.player.currentTile = tile;
+      const berry = this.gameMap.getTileAt(
+        tile.position.x,
+        tile.position.z
+      )?.berry;
+      if (berry) {
+        this.gameMap.removeBerryAtTile(tile);
+        this.onAddScorePoint(); 
+      }
+      this.endTurn();
+    });
   }
 
   private movePlayerToTile(tile: Tile) {
@@ -116,7 +156,6 @@ export class GameMaster {
   }
 
   private endTurn() {
-    // очистка подсветки  - вынести
     for (const tile of this.reachableTiles) {
       tile.walkable = false;
       tile.setHighlight(false);

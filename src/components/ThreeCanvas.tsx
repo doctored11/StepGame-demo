@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from "react";
 import { GameScene } from "../scenes/GameScene";
 import { useGame } from "../context/GameContext";
-
-export const ThreeCanvas: React.FC = () => {
+import { GameSceneContext } from "../context/GameSceneContext";
+interface Props {
+  gameSceneRef: React.RefObject<GameScene | null>;
+}
+export const ThreeCanvas: React.FC<Props> = ({ gameSceneRef }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const gameSceneRef = useRef<GameScene | null>(null);
 
   const { diceValue, diceRollId, addLog, setCanRoll, addScore } = useGame();
 
@@ -23,12 +25,7 @@ export const ThreeCanvas: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (diceValue !== null && gameSceneRef.current) {
-      gameSceneRef.current.startTurnWithDiceValue(diceValue);
-      console.log("куб брошен на", diceValue);
-    }
-  }, [diceValue, diceRollId]);
+
 
   return (
     <div

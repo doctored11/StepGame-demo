@@ -11,7 +11,7 @@ export abstract class AnimatedEntity {
 
   protected readonly animationInterval: number;
 
-  protected currentTile: THREE.Vector3;
+  protected currentAnimTile: THREE.Vector3;
 
   constructor(
     initialTilePos: THREE.Vector3,
@@ -19,9 +19,9 @@ export abstract class AnimatedEntity {
     framesPerSecond: number = 5
   ) {
     if (frames.length === 0) {
-      throw new Error("AnimatedEntity: передан пустой массив frames.");
+      throw new Error("AnimatedEntity: нет кадров!");
     }
-    this.currentTile = initialTilePos.clone();
+    this.currentAnimTile = initialTilePos.clone();
     this.animationInterval = 1 / framesPerSecond;
     this.root = new THREE.Object3D();
     this.root.position.copy(initialTilePos);

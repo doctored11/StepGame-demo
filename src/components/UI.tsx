@@ -1,8 +1,24 @@
-import React from "react";
+import React, { useState } from "react";
 import { useGame } from "../context/GameContext";
+import { DiceCanvas } from "./DiceCanvas";
+import { useGameSceneRef } from "../context/GameSceneContext";
+
 //todo - разделить+причесать
 export function UI() {
-  const { diceValue, canRoll, rollDice, log, score } = useGame();
+  const { diceValue, setDiceValue, canRoll, rollDice, log, addLog, score } =
+    useGame();
+
+  const gameSceneRef = useGameSceneRef();
+  const handleRoll = () => {
+    rollDice();
+  };
+
+  const handleAnimationComplete = (value: number) => {
+    addLog(`Выпало: ${value}`);
+
+    setDiceValue(value);
+    gameSceneRef.current?.startTurnWithDiceValue(value); // ну тут будет пока что todo -перенести
+  };
 
   return (
     <div
@@ -23,13 +39,10 @@ export function UI() {
         height: "100vh",
       }}
     >
-      <canvas
-        width={160}
-        height={160}
-        style={{ background: "#333", borderRadius: "0.5rem" }}
-      />
+      <DiceCanvas onRollComplete={handleAnimationComplete} />
+
       <button
-        onClick={rollDice}
+        onClick={handleRoll}
         disabled={!canRoll}
         style={{
           padding: "0.5rem",
@@ -42,7 +55,7 @@ export function UI() {
       >
         Бросить кубик
       </button>
-      <div>Выпало: {diceValue ?? "-"}</div>
+      <div>Выпало: {diceValue ?? diceValue ?? "??"}</div>
       <div>HP: 3</div>
       <div>🍒 Очки: {score}</div>
 
@@ -55,11 +68,28 @@ export function UI() {
           overflowY: "auto",
         }}
       >
-        {log.map((entry, idx) => (
-          <p key={idx} style={{ margin: 0 }}>
-            {entry}
-          </p>
-        ))}
+        <div
+          style={{
+            background: "#222",
+            padding: "0.5rem",
+            borderRadius: "0.25rem",
+            flexGrow: 1,
+            overflowY: "auto",
+          }}
+        >
+          {[...log].reverse().map((entry, idx) => (
+            <p
+              key={idx}
+              style={{
+                margin: 0,
+                padding: "0.25rem 0.5rem",
+                backgroundColor: idx % 2 === 0 ? "#2a2a2a" : "#1c1c1c",
+              }}
+            >
+              {entry}
+            </p>
+          ))}
+        </div>
       </div>
     </div>
   );

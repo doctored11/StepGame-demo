@@ -4,7 +4,7 @@ import { Tile, TileId } from "./Tile";
 import { TileFactory } from "./TileFactory";
 import { TileRotation, TileType } from "./TileType";
 import { Berry } from "./Berry";
-import { BerryFactory } from "./BerryFactory";
+import { PrefabFactory } from "./PrefabFactory";
 
 export class GameMap {
   private tilesById: Map<TileId, Tile> = new Map();
@@ -14,7 +14,7 @@ export class GameMap {
   constructor(
     private scene: THREE.Scene,
     private tileFactory: TileFactory,
-    private berryFactory: BerryFactory,
+    private PrefabFactory: PrefabFactory,
     private tileSize: number = 1
   ) {}
 
@@ -202,7 +202,7 @@ export class GameMap {
     const randIdx = Math.floor(Math.random() * freeTiles.length);
     const tile = freeTiles[randIdx];
 
-    const frames = this.berryFactory.createFrames();
+    const frames = this.PrefabFactory.createFrames();
 
   
     const berryWorldPos = new THREE.Vector3(
