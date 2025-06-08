@@ -11,6 +11,10 @@ interface GameContextProps {
   rollDice: () => void;
   log: string[];
   addLog: (message: string) => void;
+
+  score: number;
+  addScore: (amount: number) => void;
+  resetScore: () => void;
 }
 
 const GameContext = createContext<GameContextProps | undefined>(undefined);
@@ -20,6 +24,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [diceRollId, setDiceRollId] = useState<number>(0);
   const [canRoll, setCanRoll] = useState(true);
   const [log, setLog] = useState<string[]>([]);
+  const [score, setScore] = useState(0);
+
+  const addScore = (amount: number) => setScore((prev) => prev + amount);
+  const resetScore = () => setScore(0);
 
   const rollDice = () => {
     if (!canRoll) return;
@@ -45,6 +53,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         rollDice,
         log,
         addLog,
+        score,
+        addScore,
+        resetScore,
       }}
     >
       {children}

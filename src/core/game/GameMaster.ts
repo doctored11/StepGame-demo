@@ -12,7 +12,8 @@ export class GameMaster {
     private player: Player,
     // private getDiceValue: () => number | null,
     private onTurnComplete: () => void,
-    private onReachablesChanged: (tiles: Tile[]) => void
+    private onReachablesChanged: (tiles: Tile[]) => void,
+    private onAddScorePoint: () => void
   ) {
     this.updateReachableTiles();
   }
@@ -99,7 +100,8 @@ export class GameMaster {
 
     this.movePlayerToTile(tile);
 
-    this.gameMap.removeBerryAtTile(tile);
+    if (this.gameMap.removeBerryAtTile(tile)) this.onAddScorePoint();
+
     this.updateReachableTiles();
 
     this.endTurn();

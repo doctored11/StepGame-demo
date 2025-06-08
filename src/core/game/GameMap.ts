@@ -223,14 +223,15 @@ export class GameMap {
   }
  
   public removeBerryAtTile(tile: Tile) {
-    if (!tile.berry) return;
+    if (!tile.berry) return false;
     const berry = tile.berry;
     berry.collect();
     this.berries.delete(berry);
     tile.berry = null;
     this.freeTile(tile.position.x, tile.position.z);
-
+    
     this.spawnBerry(); //возможно вынести но пока так)
+    return true
   }
   public getAllBerries(): Berry[] {
     return Array.from(this.berries);

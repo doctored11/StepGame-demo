@@ -2,15 +2,15 @@ import React from "react";
 import { useGame } from "../context/GameContext";
 //todo - разделить+причесать
 export function UI() {
-  const { diceValue, canRoll, rollDice, log } = useGame();
+  const { diceValue, canRoll, rollDice, log, score } = useGame();
 
   return (
     <div
       style={{
-        position:"fixed",
-        zIndex:5,
-        right:0,
-        top:0,
+        position: "fixed",
+        zIndex: 5,
+        right: 0,
+        top: 0,
         display: "flex",
         flexDirection: "column",
         width: "200px",
@@ -44,6 +44,8 @@ export function UI() {
       </button>
       <div>Выпало: {diceValue ?? "-"}</div>
       <div>HP: 3</div>
+      <div>🍒 Очки: {score}</div>
+
       <div
         style={{
           background: "#222",

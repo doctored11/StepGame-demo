@@ -6,7 +6,7 @@ export const ThreeCanvas: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameSceneRef = useRef<GameScene | null>(null);
 
-  const { diceValue, diceRollId , addLog, setCanRoll } = useGame();
+  const { diceValue, diceRollId, addLog, setCanRoll, addScore } = useGame();
 
   useEffect(() => {
     if (containerRef.current) {
@@ -14,6 +14,7 @@ export const ThreeCanvas: React.FC = () => {
         getDiceValue: () => diceValue ?? 0,
         addLog,
         setCanRoll,
+        addScore,
       });
     }
 
@@ -22,13 +23,12 @@ export const ThreeCanvas: React.FC = () => {
     };
   }, []);
 
-
   useEffect(() => {
     if (diceValue !== null && gameSceneRef.current) {
       gameSceneRef.current.startTurnWithDiceValue(diceValue);
       console.log("куб брошен на", diceValue);
     }
-  }, [diceValue,diceRollId]);
+  }, [diceValue, diceRollId]);
 
   return (
     <div

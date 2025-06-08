@@ -12,6 +12,7 @@ type Callbacks = {
   getDiceValue: () => number;
   addLog: (msg: string) => void;
   setCanRoll: (canRoll: boolean) => void;
+  addScore: (amount: number) => void;
 };
 
 export class GameScene {
@@ -30,11 +31,12 @@ export class GameScene {
   private gameMaster!: GameMaster;
   private tileSelector!: TileSelector;
 
-  private berries: Set<Berry> = new Set();
+  // private berries: Set<Berry> = new Set();
 
   private getDiceValue: () => number;
   private addLog: (msg: string) => void;
   private setCanRoll: (canRoll: boolean) => void;
+  private addScore: (amount: number) => void;
 
   constructor(container: HTMLElement, callbacks: Callbacks) {
     this.container = container;
@@ -42,6 +44,7 @@ export class GameScene {
     this.getDiceValue = callbacks.getDiceValue;
     this.addLog = callbacks.addLog;
     this.setCanRoll = callbacks.setCanRoll;
+    this.addScore = callbacks.addScore;
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x202020);
@@ -129,6 +132,10 @@ export class GameScene {
       (reachableTiles: Tile[]) => {
         this.gameMap.getAllTiles().forEach((t) => t.disableGlow());
         reachableTiles.forEach((t) => t.enableGlow());
+      },
+      () => {
+        this.addScore(1);
+        this.addLog("+1");
       }
     );
 
@@ -148,7 +155,6 @@ export class GameScene {
 
     // this.player.update(delta); //todo унаследовать от анимации и добавить модели
 
-   
     this.gameMap.getAllBerries().forEach((berry) => {
       berry.update(delta);
     });
