@@ -8,9 +8,15 @@ interface GameContextProps {
   canRoll: boolean;
   setCanRoll: (canRoll: boolean) => void;
 
-  rollDice: () => void;
+  rollDice: () => number;
   log: string[];
   addLog: (message: string) => void;
+
+  score: number;
+  addScore: (amount: number) => void;
+  resetScore: () => void;
+
+  
 }
 
 const GameContext = createContext<GameContextProps | undefined>(undefined);
@@ -20,14 +26,19 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [diceRollId, setDiceRollId] = useState<number>(0);
   const [canRoll, setCanRoll] = useState(true);
   const [log, setLog] = useState<string[]>([]);
+  const [score, setScore] = useState(0);
+
+  const addScore = (amount: number) => setScore((prev) => prev + amount);
+  const resetScore = () => setScore(0);
 
   const rollDice = () => {
-    if (!canRoll) return;
+    if (!canRoll) return 0;
     const value = Math.floor(Math.random() * 6) + 1;
-    setDiceValue(value);
+    // setDiceValue(value);
     setCanRoll(false);
     setDiceRollId((prev) => prev + 1);
-    addLog(`Бросок кубика: ${value}`);
+    addLog(`Кубик брошен...`);
+    return value;
   };
 
   const addLog = (message: string) => {
@@ -45,6 +56,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         rollDice,
         log,
         addLog,
+        score,
+        addScore,
+        resetScore,
       }}
     >
       {children}
@@ -54,6 +68,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
 export const useGame = () => {
   const context = useContext(GameContext);
-  if (!context) throw new Error("useGame must be used within GameProvider");
+  if (!context) throw new Error("Нужен провайдер");
   return context;
 };

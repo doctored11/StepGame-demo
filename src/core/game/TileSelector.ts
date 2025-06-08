@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { Tile } from "./Tile";
 import { GameMap } from "./GameMap";
-// import { Player } from "./Player";
 
 export class TileSelector {
   private raycaster = new THREE.Raycaster();
@@ -34,8 +33,6 @@ export class TileSelector {
 
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
-    //просто добавил коллайде
-
     const colliders = this.gameMap.getAllTiles().map((t) => t.collider);
     const intersects = this.raycaster.intersectObjects(colliders, false);
 
@@ -52,19 +49,8 @@ export class TileSelector {
     if (!tile) return;
 
     if (tile !== this.selectedTile) {
-      // if (this.selectedTile) this.selectedTile.deselect();
-
-      // tile.select();
-      
       this.selectedTile = tile;
       this.onTileSelectedCallback?.(tile);
     }
   };
-
-  // public clearSelection() {
-  //   if (this.selectedTile) {
-  //     this.selectedTile.deselect();
-  //     this.selectedTile = null;
-  //   }
-  // }
 }

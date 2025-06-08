@@ -75,43 +75,48 @@ export class TileFactory {
     type: TileType;
     rotation: TileRotation;
   } {
-    //пошел брутфорс
-    //https://azbyka.ru/molitvoslov/molitvy-uchashhegosja.html#n5F
+    
     switch (mask) {
       case 0b0001:
-        return { type: TileType.STRAIGHT, rotation: TileRotation.ROT_0 }; //?
+        return { type: TileType.STRAIGHT, rotation: TileRotation.ROT_0 }; //? - 1 сосед пусть будет как заглушка (todo мб добавить логику тупиков)
       case 0b0010:
-        return { type: TileType.STRAIGHT, rotation: TileRotation.ROT_270 }; //?
+        return { type: TileType.STRAIGHT, rotation: TileRotation.ROT_90 };
       case 0b0100:
-        return { type: TileType.STRAIGHT, rotation: TileRotation.ROT_0 }; //?
+        return { type: TileType.STRAIGHT, rotation: TileRotation.ROT_0 };
       case 0b1000:
-        return { type: TileType.STRAIGHT, rotation: TileRotation.ROT_90 }; //?
+        return { type: TileType.STRAIGHT, rotation: TileRotation.ROT_90 };
 
       case 0b0011:
-        return { type: TileType.TURN, rotation: TileRotation.ROT_90 }; //!
+        return { type: TileType.TURN, rotation: TileRotation.ROT_180 }; 
       case 0b0110:
-        return { type: TileType.TURN, rotation: TileRotation.ROT_0 }; //!
+        return { type: TileType.TURN, rotation: TileRotation.ROT_90 }; 
       case 0b1100:
-        return { type: TileType.TURN, rotation: TileRotation.ROT_270 }; //!
+        return { type: TileType.TURN, rotation: TileRotation.ROT_0 }; 
       case 0b1001:
-        return { type: TileType.TURN, rotation: TileRotation.ROT_180 };
+        return { type: TileType.TURN, rotation: TileRotation.ROT_270 };
 
       case 0b0101:
-        return { type: TileType.STRAIGHT, rotation: TileRotation.ROT_90 }; //!
+        return {
+          type: TileType.STRAIGHT,
+          rotation:
+            Math.random() > 0.2 ? TileRotation.ROT_90 : TileRotation.ROT_270,
+        }; 
       case 0b1010:
-        return { type: TileType.STRAIGHT, rotation: TileRotation.ROT_0 }; //!
+        return { type: TileType.STRAIGHT, rotation:
+            Math.random() > 0.2 ? TileRotation.ROT_0 : TileRotation.ROT_180, }; 
 
       case 0b0111:
-        return { type: TileType.T_JUNCTION, rotation: TileRotation.ROT_180 }; //!
+        return { type: TileType.T_JUNCTION, rotation: TileRotation.ROT_90 }; 
       case 0b1110:
-        return { type: TileType.T_JUNCTION, rotation: TileRotation.ROT_90 }; //!
+        return { type: TileType.T_JUNCTION, rotation: TileRotation.ROT_0 }; 
       case 0b1101:
-        return { type: TileType.T_JUNCTION, rotation: TileRotation.ROT_0 }; //!
+        return { type: TileType.T_JUNCTION, rotation: TileRotation.ROT_270 }; 
       case 0b1011:
-        return { type: TileType.T_JUNCTION, rotation: TileRotation.ROT_270 }; //!
+        return { type: TileType.T_JUNCTION, rotation: TileRotation.ROT_180 }; 
 
       case 0b1111:
-        return { type: TileType.CROSS, rotation: TileRotation.ROT_90 }; //!
+        return { type: TileType.CROSS, rotation:
+            Math.random() > 0.5 ? TileRotation.ROT_90 : TileRotation.ROT_0, }; 
 
       default:
         // заглушка
