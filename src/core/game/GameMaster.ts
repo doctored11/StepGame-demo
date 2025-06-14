@@ -1,11 +1,15 @@
 import { GameMap } from "./GameMap";
 import { Player } from "./Player";
-import { Tile } from "./Tile";
+import { Tile, TileId } from "./Tile";
+import { RedEnemy } from "./RedEnemy";
+import { Enemy } from "./Enemy";
+import { findPath, findReachableTiles, PathfinderOptions } from "./Pathfinder";
 
 export class GameMaster {
   private reachableTiles: Set<Tile> = new Set();
   private isTurnInProgress: boolean = false;
   private currentDiceValue: number | null = null;
+  public enemies: Enemy[] = [];
 
   constructor(
     private gameMap: GameMap,
@@ -18,7 +22,14 @@ export class GameMaster {
   }
   //
 
-  updateReachableTiles() {
+  public getPlayer() {
+    return this.player;
+  }
+  public getGameMap() {
+    return this.gameMap;
+  }
+
+  public updateReachableTiles() {
     for (const tile of this.gameMap.getAllTiles()) {
       tile.setWalkable(false);
       tile.setHighlight(false);
@@ -32,9 +43,12 @@ export class GameMaster {
     }
     console.warn(diceValue);
 
-    const reachable = this.findReachableTiles(
+    const blocked = new Set<Tile>(this.enemies.map((e) => e.currentTile));
+    const reachable = findReachableTiles(
       this.player.currentTile,
-      diceValue
+      this.currentDiceValue!,
+      this.gameMap,
+      { blockedTiles: blocked, allowEndOnBlocked: false }
     );
 
     this.reachableTiles = new Set(reachable);
@@ -53,7 +67,7 @@ export class GameMaster {
   }
 
   // BFS -todo вынести в утилиты
-  private findReachableTiles(startTile: Tile, maxSteps: number): Tile[] {
+  public findReachableTiles(startTile: Tile, maxSteps: number): Tile[] {
     const visited = new Set<Tile>();
     const queue: Array<{ tile: Tile; steps: number }> = [
       { tile: startTile, steps: 0 },
@@ -82,55 +96,66 @@ export class GameMaster {
     return result.filter((t) => t !== startTile); //да костыль - при выбросе именно 2 был ход под себя
   }
 
- 
-  private findPath(startTile: Tile, endTile: Tile): Tile[] {
-    // с сохр предков
-    const queue: Tile[] = [startTile];
-    const cameFrom = new Map<Tile, Tile | null>();
-    cameFrom.set(startTile, null);
+  // public findPath(startTile: Tile, endTile: Tile): Tile[] {
+  //   // с сохр предков
+  //   const queue: Tile[] = [startTile];
+  //   const cameFrom = new Map<Tile, Tile | null>();
+  //   cameFrom.set(startTile, null);
 
-    while (queue.length > 0) {
-      const tile = queue.shift()!;
-      if (tile === endTile) break;
+  //   while (queue.length > 0) {
+  //     const tile = queue.shift()!;
+  //     if (tile === endTile) break;
 
-      for (const nid of tile.neighbors) {
-        const neigh = this.gameMap.getTileById(nid);
-        if (neigh && !cameFrom.has(neigh)) {
-          cameFrom.set(neigh, tile);
-          queue.push(neigh);
-        }
-      }
-    }
+  //     for (const nid of tile.neighbors) {
+  //       const neigh = this.gameMap.getTileById(nid);
+  //       if (neigh && !cameFrom.has(neigh)) {
+  //         cameFrom.set(neigh, tile);
+  //         queue.push(neigh);
+  //       }
+  //     }
+  //   }
 
-    if (!cameFrom.has(endTile)) {
-      return [];
-    }
+  //   if (!cameFrom.has(endTile)) {
+  //     return [];
+  //   }
 
-    const path: Tile[] = [];
-    let cur: Tile | null = endTile;
-    while (cur && cur !== startTile) {
-      path.push(cur);
-      cur = cameFrom.get(cur)!;
-    }
-    return path.reverse();
-  }
+  //   const path: Tile[] = [];
+  //   let cur: Tile | null = endTile;
+  //   while (cur && cur !== startTile) {
+  //     path.push(cur);
+  //     cur = cameFrom.get(cur)!;
+  //   }
+  //   return path.reverse();
+  // }
 
-  canMoveTo(tile: Tile): boolean {
+  public canMoveTo(tile: Tile): boolean {
     return this.reachableTiles.has(tile);
   }
 
-  onTileSelected(tile: Tile) {
-    if (!this.isTurnInProgress ) {
-      console.log("Ход не начат — подожди броска кубика");
+  public getTileById(id: TileId) {
+    return this.gameMap.getTileById(id);
+  }
+
+  public onTileSelected(tile: Tile) {
+    if (!this.isTurnInProgress) {
+      console.log("⏱️Ход не начат - жди броска кубика");
       return;
     }
     if (!this.canMoveTo(tile)) {
       console.log("Нельзя ходить на эту клетку");
       return;
     }
-
-    const path = this.findPath(this.player.currentTile, tile);
     this.isTurnInProgress = false;
+    const blocked = new Set<Tile>(this.enemies.map((e) => e.currentTile));
+    const path = findPath(this.player.currentTile, tile, this.gameMap, {
+      blockedTiles: blocked,
+      allowEndOnBlocked: false,
+    });
+    if (path.length === 0) {
+      console.log("⚠️пат! Никаких ходов нет");
+      this.endTurn();
+      return;
+    }
 
     this.updateReachableTiles();
     this.player.moveAlongTiles(path).then(() => {
@@ -141,10 +166,13 @@ export class GameMaster {
       )?.berry;
       if (berry) {
         this.gameMap.removeBerryAtTile(tile);
-        this.onAddScorePoint(); 
+        this.onAddScorePoint();
       }
       this.endTurn();
     });
+  }
+  public registerEnemy(enemy: Enemy) {
+    this.enemies.push(enemy);
   }
 
   private movePlayerToTile(tile: Tile) {
@@ -155,10 +183,13 @@ export class GameMaster {
     this.player.currentTile = tile;
   }
 
-  private endTurn() {
+  private async endTurn() {
     for (const tile of this.reachableTiles) {
       tile.walkable = false;
       tile.setHighlight(false);
+    }
+    for (const e of this.enemies) {
+      await e.takeTurn();
     }
 
     this.reachableTiles.clear();

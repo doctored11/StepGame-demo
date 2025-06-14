@@ -7,6 +7,8 @@ import { TileFactory } from "../core/game/TileFactory";
 import { Tile } from "../core/game/Tile";
 import { Berry } from "../core/game/Berry";
 import { PrefabFactory } from "../core/game/PrefabFactory";
+import { RedEnemy } from "../core/game/RedEnemy";
+import { BlueEnemy } from "../core/game/BlueEnemy";
 
 type Callbacks = {
   getDiceValue: () => number;
@@ -39,6 +41,8 @@ export class GameScene {
   private addLog: (msg: string) => void;
   private setCanRoll: (canRoll: boolean) => void;
   private addScore: (amount: number) => void;
+  private localScore: number;
+  private isBlueSpawned: boolean;
 
   constructor(container: HTMLElement, callbacks: Callbacks) {
     this.container = container;
@@ -47,15 +51,17 @@ export class GameScene {
     this.addLog = callbacks.addLog;
     this.setCanRoll = callbacks.setCanRoll;
     this.addScore = callbacks.addScore;
+    this.localScore = 0;
+    this.isBlueSpawned = false;
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x202020);
 
     const aspect = container.clientWidth / container.clientHeight;
     this.camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
-    const camX = 3;
-    const camY = 5;
-    const camZ = 5.5;
+    const camX = 5;
+    const camY = 7;
+    const camZ = 7.5;
 
     const lookX = camX;
     const lookY = camY - 3;
@@ -81,6 +87,19 @@ export class GameScene {
     dirLight.castShadow = true;
     this.scene.add(dirLight);
 
+    const waterGeometry = new THREE.PlaneGeometry(100, 100);
+    const waterMaterial = new THREE.MeshPhongMaterial({
+      color: 0x44ccff,
+      transparent: true,
+      opacity: 0.6,
+
+      shininess: 100,
+    });
+    const water = new THREE.Mesh(waterGeometry, waterMaterial);
+    water.rotation.x = -Math.PI / 2;
+    water.position.y = -0.33;
+    this.scene.add(water);
+
     this.tileFactory = new TileFactory();
     this.PrefabFactory = new PrefabFactory();
     this.initializeAsync();
@@ -104,7 +123,7 @@ export class GameScene {
       1
     );
 
-    this.gameMap.generateGrid(7, 7);
+    this.gameMap.generateGrid(10, 10);
     this.gameMap.addToScene(this.scene);
 
     const startTile = this.gameMap.getTileById(1); //todo порандомить
@@ -151,13 +170,76 @@ export class GameScene {
       },
       () => {
         this.addScore(1);
+        this.localScore++;
         this.addLog("+1");
+        if (!this.isBlueSpawned && this.localScore >= 1) {
+          this.spawnBlueEnemy();
+          this.isBlueSpawned = true;
+        }
       }
     );
+
+    const redEnemyFrames = await this.PrefabFactory.loadMultipleGLBs([
+      "/assets/models/red_1.glb",
+      "/assets/models/red_2.glb",
+    ]);
+    const redStartTile = this.gameMap.getTileById(5)!; //todo порандомить 5
+
+    const redEnemy = new RedEnemy(
+      this.gameMaster,
+      redStartTile,
+      redEnemyFrames
+    );
+
+    this.gameMaster.registerEnemy(redEnemy);
+    this.scene.add(redEnemy.getObject3D());
 
     this.gameMaster.updateReachableTiles();
 
     this.isInitialized = true;
+  }
+
+  private async spawnBlueEnemy() {
+    const blueFrames = await this.PrefabFactory.loadMultipleGLBs([
+      "/assets/models/blue_1.glb",
+      "/assets/models/blue_2.glb",
+    ]);
+
+    let free = this.gameMap
+      .getFreeTiles()
+      .filter((t) => t !== this.player.currentTile);
+
+    const occupiedByEnemy = new Set(
+      this.gameMaster.enemies.map(
+        (e) => `${e.currentTile.position.x},${e.currentTile.position.z}`
+      )
+    );
+    free = free.filter(
+      (t) => !occupiedByEnemy.has(`${t.position.x},${t.position.z}`)
+    );
+
+    const MinDist = 4;
+    const px = this.player.currentTile.position.x;
+    const pz = this.player.currentTile.position.z;
+    const farEnough = free.filter((t) => {
+      const dx = Math.abs(t.position.x - px);
+      const dz = Math.abs(t.position.z - pz);
+      return dx + dz > MinDist;
+    });
+
+    const candidates = farEnough.length > 0 ? farEnough : free;
+    if (candidates.length === 0) {
+      console.warn("Нет подходящих тайлов для синего ");
+      return;
+    }
+
+    const idx = Math.floor(Math.random() * candidates.length);
+    const spawnTile = candidates[idx];
+    const blue = new BlueEnemy(this.gameMaster, spawnTile, blueFrames);
+    this.gameMaster.registerEnemy(blue);
+    this.scene.add(blue.getObject3D());
+
+    this.addLog("🔷 синий заспавнился");
   }
 
   public startTurnWithDiceValue(diceValue: number) {
@@ -177,6 +259,9 @@ export class GameScene {
     this.gameMap.getAllBerries().forEach((berry) => {
       berry.update(delta);
     });
+
+    this.gameMaster.enemies.forEach((e) => e.update(delta));
+
     this.player.update(delta);
 
     this.renderer.render(this.scene, this.camera);

@@ -19,7 +19,6 @@ export class Tile {
     THREE.Material | THREE.Material[]
   > = new Map();
 
-
   constructor(id: TileId, position: THREE.Vector3, height: number = 1) {
     this.id = id;
     this.position = position;
@@ -126,7 +125,6 @@ export class Tile {
     this.originalMaterials.clear();
   }
 
-
   public getObject3D(): THREE.Object3D {
     return this.object;
   }
@@ -134,5 +132,33 @@ export class Tile {
   public isFree(occupiedTiles: Set<string>): boolean {
     const key = `${this.position.x},${this.position.z}`;
     return !occupiedTiles.has(key);
+  }
+
+  public addIdLabelToScene() {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d")!;
+    canvas.width = 128;
+    canvas.height = 64;
+
+    ctx.font = "24px sans-serif";
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(this.id + "", canvas.width / 2, canvas.height / 2);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+
+    const material = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthTest: false, 
+    });
+
+    const sprite = new THREE.Sprite(material);
+    sprite.scale.set(1.5, 0.75, 1);
+    sprite.position.set(0, 1.5, 0); 
+
+    this.object.add(sprite);
   }
 }

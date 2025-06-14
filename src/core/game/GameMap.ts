@@ -170,6 +170,7 @@ export class GameMap {
   public addToScene(scene: THREE.Scene) {
     for (const tile of this.tilesById.values()) {
       tile.addToScene(scene);
+      tile.addIdLabelToScene();
       //
       const boxHelper = new THREE.BoxHelper(tile.object, 0xff0000);
       scene.add(boxHelper);
@@ -194,9 +195,9 @@ export class GameMap {
   }
 
   //
- //todo -возмодно вынести в мастер - подумать
+  //todo -возмодно вынести в мастер - подумать
   public spawnBerry(): Berry | null {
-    const freeTiles = this.getFreeTiles(); 
+    const freeTiles = this.getFreeTiles();
     if (freeTiles.length === 0) return null;
 
     const randIdx = Math.floor(Math.random() * freeTiles.length);
@@ -204,7 +205,6 @@ export class GameMap {
 
     const frames = this.PrefabFactory.createFrames();
 
-  
     const berryWorldPos = new THREE.Vector3(
       tile.position.x,
       tile.position.y + 0.5,
@@ -221,7 +221,7 @@ export class GameMap {
 
     return berry;
   }
- 
+
   public removeBerryAtTile(tile: Tile) {
     if (!tile.berry) return false;
     const berry = tile.berry;
@@ -229,9 +229,9 @@ export class GameMap {
     this.berries.delete(berry);
     tile.berry = null;
     this.freeTile(tile.position.x, tile.position.z);
-    
+
     this.spawnBerry(); //возможно вынести но пока так)
-    return true
+    return true;
   }
   public getAllBerries(): Berry[] {
     return Array.from(this.berries);
