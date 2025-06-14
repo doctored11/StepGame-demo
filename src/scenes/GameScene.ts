@@ -108,6 +108,10 @@ export class GameScene {
     this.animate();
   }
 
+  public getScore() {
+    return this.localScore;
+  }
+
   private async initializeAsync() {
     await this.tileFactory.loadAll("/assets/models/tiles/");
     await this.PrefabFactory.loadAll([
@@ -172,10 +176,17 @@ export class GameScene {
         this.addScore(1);
         this.localScore++;
         this.addLog("+1");
-        if (!this.isBlueSpawned && this.localScore >= 1) {
+        if (!this.isBlueSpawned && this.localScore >= 3) {
           this.spawnBlueEnemy();
           this.isBlueSpawned = true;
         }
+      },
+      (result, score, turns) => {
+       
+        this.addLog(
+          `🎯 Игра окончена! Результат: ${result}, очки: ${score}, ходы: ${turns}`
+        );
+       //todo вызвать UI
       }
     );
 

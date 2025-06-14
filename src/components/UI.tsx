@@ -56,8 +56,8 @@ export function UI() {
         Бросить кубик
       </button>
       <div>Выпало: {diceValue ?? diceValue ?? "??"}</div>
-      <div>HP: 3</div>
-      <div>🍒 Очки: {score}</div>
+      <div>HP: 1</div>
+      <div>🍒 Очки: {score} /9</div>
 
       <div
         style={{

@@ -5,10 +5,19 @@ import { RedEnemy } from "./RedEnemy";
 import { Enemy } from "./Enemy";
 import { findPath, findReachableTiles, PathfinderOptions } from "./Pathfinder";
 
+type GameResult = "win" | "lose" | "stalemate" | null;
+
 export class GameMaster {
   private reachableTiles: Set<Tile> = new Set();
   private isTurnInProgress: boolean = false;
   private currentDiceValue: number | null = null;
+
+  private gameOver: boolean = false;
+  private gameResult: GameResult = null;
+
+  private score = 0;
+  private turns = 0;
+
   public enemies: Enemy[] = [];
 
   constructor(
@@ -16,7 +25,12 @@ export class GameMaster {
     private player: Player,
     private onTurnComplete: () => void,
     private onReachablesChanged: (tiles: Tile[]) => void,
-    private onAddScorePoint: () => void
+    private onAddScorePoint: () => void,
+    private onGameOver: (
+      result: GameResult,
+      score: number,
+      turns: number
+    ) => void
   ) {
     this.updateReachableTiles();
   }
@@ -64,6 +78,22 @@ export class GameMaster {
     this.isTurnInProgress = true;
 
     this.updateReachableTiles();
+
+    if (this.reachableTiles.size === 0) {
+      console.warn("🚫 Пат! Нет возможных ходов.");
+      this.endGame("stalemate");
+      return;
+    }
+  }
+
+  private endGame(result: GameResult) {
+    this.gameOver = true;
+    this.gameResult = result;
+
+    const turns = this.turns;
+    const score = this.score;
+    console.log("💀 Игра завершена:", result);
+    this.onGameOver(result, score, turns);
   }
 
   // BFS -todo вынести в утилиты
@@ -95,38 +125,6 @@ export class GameMaster {
 
     return result.filter((t) => t !== startTile); //да костыль - при выбросе именно 2 был ход под себя
   }
-
-  // public findPath(startTile: Tile, endTile: Tile): Tile[] {
-  //   // с сохр предков
-  //   const queue: Tile[] = [startTile];
-  //   const cameFrom = new Map<Tile, Tile | null>();
-  //   cameFrom.set(startTile, null);
-
-  //   while (queue.length > 0) {
-  //     const tile = queue.shift()!;
-  //     if (tile === endTile) break;
-
-  //     for (const nid of tile.neighbors) {
-  //       const neigh = this.gameMap.getTileById(nid);
-  //       if (neigh && !cameFrom.has(neigh)) {
-  //         cameFrom.set(neigh, tile);
-  //         queue.push(neigh);
-  //       }
-  //     }
-  //   }
-
-  //   if (!cameFrom.has(endTile)) {
-  //     return [];
-  //   }
-
-  //   const path: Tile[] = [];
-  //   let cur: Tile | null = endTile;
-  //   while (cur && cur !== startTile) {
-  //     path.push(cur);
-  //     cur = cameFrom.get(cur)!;
-  //   }
-  //   return path.reverse();
-  // }
 
   public canMoveTo(tile: Tile): boolean {
     return this.reachableTiles.has(tile);
@@ -166,7 +164,13 @@ export class GameMaster {
       )?.berry;
       if (berry) {
         this.gameMap.removeBerryAtTile(tile);
+        this.score++;
         this.onAddScorePoint();
+
+        if (this.score >= 9) {
+          this.endGame("win");
+          return;
+        }
       }
       this.endTurn();
     });
@@ -183,13 +187,27 @@ export class GameMaster {
     this.player.currentTile = tile;
   }
 
+  public getScore() {
+    return this.score;
+  }
+
+  public getTurns() {
+    return this.turns;
+  }
+
   private async endTurn() {
+    this.turns++;
     for (const tile of this.reachableTiles) {
       tile.walkable = false;
       tile.setHighlight(false);
     }
     for (const e of this.enemies) {
       await e.takeTurn();
+
+      if (e.currentTile === this.player.currentTile) {
+        this.endGame("lose");
+        return;
+      }
     }
 
     this.reachableTiles.clear();
