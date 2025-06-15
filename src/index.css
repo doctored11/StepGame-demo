@@ -1,5 +1,12 @@
-body{
-    overflow: hidden;
-    margin: 0;
-    padding: 0;
+@font-face {
+  font-family: "GNF";
+  src: url("./fonts/GNF.ttf") format("truetype");
+}
+
+body {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+
+  font-family: "GNF", sans-serif;
 }
