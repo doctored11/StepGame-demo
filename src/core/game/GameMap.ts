@@ -170,12 +170,12 @@ export class GameMap {
   public addToScene(scene: THREE.Scene) {
     for (const tile of this.tilesById.values()) {
       tile.addToScene(scene);
-      tile.addIdLabelToScene();
+      // tile.addIdLabelToScene();
       //
-      const boxHelper = new THREE.BoxHelper(tile.object, 0xff0000);
-      scene.add(boxHelper);
-      const axesHelper = new THREE.AxesHelper(0.5);
-      tile.object.add(axesHelper);
+      // const boxHelper = new THREE.BoxHelper(tile.object, 0xff0000);
+      // scene.add(boxHelper);
+      // const axesHelper = new THREE.AxesHelper(0.5);
+      // tile.object.add(axesHelper);
     }
   }
 
