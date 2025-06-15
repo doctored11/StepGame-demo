@@ -5,7 +5,8 @@ import { RedEnemy } from "./RedEnemy";
 import { Enemy } from "./Enemy";
 import { findPath, findReachableTiles, PathfinderOptions } from "./Pathfinder";
 
-type GameResult = "win" | "lose" | "stalemate" | null;
+export type GameResult = "win" | "lose" | "stalemate" | null;
+
 
 export class GameMaster {
   private reachableTiles: Set<Tile> = new Set();
@@ -55,6 +56,7 @@ export class GameMaster {
       this.onReachablesChanged([]);
       return;
     }
+    
     console.warn(diceValue);
 
     const blocked = new Set<Tile>(this.enemies.map((e) => e.currentTile));
@@ -97,34 +99,34 @@ export class GameMaster {
   }
 
   // BFS -todo вынести в утилиты
-  public findReachableTiles(startTile: Tile, maxSteps: number): Tile[] {
-    const visited = new Set<Tile>();
-    const queue: Array<{ tile: Tile; steps: number }> = [
-      { tile: startTile, steps: 0 },
-    ];
-    const result: Tile[] = [];
+  // public findReachableTiles(startTile: Tile, maxSteps: number): Tile[] {
+  //   const visited = new Set<Tile>();
+  //   const queue: Array<{ tile: Tile; steps: number }> = [
+  //     { tile: startTile, steps: 0 },
+  //   ];
+  //   const result: Tile[] = [];
 
-    while (queue.length > 0) {
-      const { tile, steps } = queue.shift()!;
-      if (steps > maxSteps) continue;
+  //   while (queue.length > 0) {
+  //     const { tile, steps } = queue.shift()!;
+  //     if (steps > maxSteps) continue;
 
-      if (steps === maxSteps) {
-        result.push(tile);
-        continue;
-      }
+  //     if (steps === maxSteps) {
+  //       result.push(tile);
+  //       continue;
+  //     }
 
-      for (const neighborId of tile.neighbors) {
-        const neighbor = this.gameMap.getTileById(neighborId);
-        if (neighbor && !visited.has(neighbor)) {
-          visited.add(neighbor);
-          queue.push({ tile: neighbor, steps: steps + 1 });
-        }
-      }
-    }
-    // console.log("🐣 ", result);
+  //     for (const neighborId of tile.neighbors) {
+  //       const neighbor = this.gameMap.getTileById(neighborId);
+  //       if (neighbor && !visited.has(neighbor)) {
+  //         visited.add(neighbor);
+  //         queue.push({ tile: neighbor, steps: steps + 1 });
+  //       }
+  //     }
+  //   }
+  //   // console.log("🐣 ", result);
 
-    return result.filter((t) => t !== startTile); //да костыль - при выбросе именно 2 был ход под себя
-  }
+  //   return result.filter((t) => t !== startTile); //да костыль - при выбросе именно 2 был ход под себя
+  // }
 
   public canMoveTo(tile: Tile): boolean {
     return this.reachableTiles.has(tile);

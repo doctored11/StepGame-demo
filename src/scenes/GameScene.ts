@@ -2,19 +2,21 @@ import * as THREE from "three";
 import { GameMap } from "../core/game/GameMap";
 import { TileSelector } from "../core/game/TileSelector";
 import { Player } from "../core/game/Player";
-import { GameMaster } from "../core/game/GameMaster";
+import { GameMaster, GameResult } from "../core/game/GameMaster";
 import { TileFactory } from "../core/game/TileFactory";
 import { Tile } from "../core/game/Tile";
 import { Berry } from "../core/game/Berry";
 import { PrefabFactory } from "../core/game/PrefabFactory";
 import { RedEnemy } from "../core/game/RedEnemy";
 import { BlueEnemy } from "../core/game/BlueEnemy";
+import { useGame } from "../context/GameContext";
 
 type Callbacks = {
   getDiceValue: () => number;
   addLog: (msg: string) => void;
   setCanRoll: (canRoll: boolean) => void;
   addScore: (amount: number) => void;
+  onGameOver: (result: GameResult, turns: number) => void;
 };
 
 export class GameScene {
@@ -41,6 +43,8 @@ export class GameScene {
   private addLog: (msg: string) => void;
   private setCanRoll: (canRoll: boolean) => void;
   private addScore: (amount: number) => void;
+  private onGameOver: (result: GameResult, turns: number) => void;
+
   private localScore: number;
   private isBlueSpawned: boolean;
 
@@ -51,6 +55,7 @@ export class GameScene {
     this.addLog = callbacks.addLog;
     this.setCanRoll = callbacks.setCanRoll;
     this.addScore = callbacks.addScore;
+    this.onGameOver = callbacks.onGameOver;
     this.localScore = 0;
     this.isBlueSpawned = false;
 
@@ -182,11 +187,10 @@ export class GameScene {
         }
       },
       (result, score, turns) => {
-       
         this.addLog(
           `🎯 Игра окончена! Результат: ${result}, очки: ${score}, ходы: ${turns}`
         );
-       //todo вызвать UI
+        this.onGameOver(result, turns);
       }
     );
 
@@ -260,7 +264,7 @@ export class GameScene {
 
   private animate = () => {
     this.animationId = requestAnimationFrame(this.animate);
-    if (!this.gameMap || !this.player) return;
+    if (!this.isInitialized || !this.gameMap || !this.player) return;
     const now = performance.now();
     const delta = (now - this.lastFrameTime) / 1000;
     this.lastFrameTime = now;

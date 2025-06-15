@@ -8,7 +8,8 @@ interface Props {
 export const ThreeCanvas: React.FC<Props> = ({ gameSceneRef }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { diceValue, diceRollId, addLog, setCanRoll, addScore } = useGame();
+  const { diceValue, diceRollId, addLog, setCanRoll, addScore, setGameOver } =
+    useGame();
 
   useEffect(() => {
     if (containerRef.current) {
@@ -17,6 +18,9 @@ export const ThreeCanvas: React.FC<Props> = ({ gameSceneRef }) => {
         addLog,
         setCanRoll,
         addScore,
+        onGameOver: (result, turns) => {
+          setGameOver(result, turns);
+        },
       });
     }
 
@@ -24,8 +28,6 @@ export const ThreeCanvas: React.FC<Props> = ({ gameSceneRef }) => {
       gameSceneRef.current?.dispose();
     };
   }, []);
-
-
 
   return (
     <div

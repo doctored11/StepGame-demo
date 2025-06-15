@@ -1,0 +1,47 @@
+.game-over-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.game-over-modal {
+  display: flex;
+  background: #222;
+  border-radius: 8px;
+  overflow: hidden;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.game-over-canvas {
+  width: 200px;
+  height: 200px;
+}
+
+.game-over-content {
+  color: #b5b5b5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.game-over-title {
+  font-size: 2rem;
+  margin: 0 0 0.5rem;
+  text-align: center;
+}
+
+.game-over-stats {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  text-align: center;
+}

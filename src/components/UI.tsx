@@ -1,96 +1,49 @@
-import React, { useState } from "react";
+import React from "react";
 import { useGame } from "../context/GameContext";
 import { DiceCanvas } from "./DiceCanvas";
 import { useGameSceneRef } from "../context/GameSceneContext";
+import { GameOver } from "./GameOver";
+import "./UI.css";
 
-//todo - разделить+причесать
 export function UI() {
-  const { diceValue, setDiceValue, canRoll, rollDice, log, addLog, score } =
+  const { diceValue, setDiceValue, canRoll, rollDice, log, score, addLog } =
     useGame();
-
   const gameSceneRef = useGameSceneRef();
+
   const handleRoll = () => {
-    rollDice();
+    const value = rollDice();
   };
 
   const handleAnimationComplete = (value: number) => {
-    addLog(`Выпало: ${value}`);
-
     setDiceValue(value);
-    gameSceneRef.current?.startTurnWithDiceValue(value); // ну тут будет пока что todo -перенести
+    addLog(`Выпало: ` + value);
+
+    gameSceneRef.current?.startTurnWithDiceValue(value);
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        zIndex: 5,
-        right: 0,
-        top: 0,
-        display: "flex",
-        flexDirection: "column",
-        width: "200px",
-        padding: "1rem",
-        background: "#1e1e1e",
-        color: "white",
-        fontFamily: "sans-serif",
-        gap: "1rem",
-        borderLeft: "2px solid #444",
-        height: "100vh",
-      }}
-    >
-      <DiceCanvas onRollComplete={handleAnimationComplete} />
+    <>
+      <GameOver />
 
-      <button
-        onClick={handleRoll}
-        disabled={!canRoll}
-        style={{
-          padding: "0.5rem",
-          background: canRoll ? "#3b82f6" : "#555",
-          color: "white",
-          border: "none",
-          borderRadius: "0.25rem",
-          cursor: canRoll ? "pointer" : "not-allowed",
-        }}
-      >
-        Бросить кубик
-      </button>
-      <div>Выпало: {diceValue ?? diceValue ?? "??"}</div>
-      <div>HP: 1</div>
-      <div>🍒 Очки: {score} /9</div>
+      <div className="ui-panel">
+        <DiceCanvas onRollComplete={handleAnimationComplete} />
 
-      <div
-        style={{
-          background: "#222",
-          padding: "0.5rem",
-          borderRadius: "0.25rem",
-          flexGrow: 1,
-          overflowY: "auto",
-        }}
-      >
-        <div
-          style={{
-            background: "#222",
-            padding: "0.5rem",
-            borderRadius: "0.25rem",
-            flexGrow: 1,
-            overflowY: "auto",
-          }}
-        >
+        <button className="ui-button" onClick={handleRoll} disabled={!canRoll}>
+          Бросить кубик
+        </button>
+
+        <p className="ui-stats">Выпало: {diceValue ?? "??"}</p>
+        <p className="ui-stats">HP: 1</p>
+        <p className="ui-stats">🍒 Очки: {score} / 9</p>
+
+        <div className="ui-log">
           {[...log].reverse().map((entry, idx) => (
-            <p
-              key={idx}
-              style={{
-                margin: 0,
-                padding: "0.25rem 0.5rem",
-                backgroundColor: idx % 2 === 0 ? "#2a2a2a" : "#1c1c1c",
-              }}
-            >
+            <p key={idx} className="ui-log-entry">
               {entry}
             </p>
           ))}
         </div>
       </div>
-    </div>
+    </>
   );
 }

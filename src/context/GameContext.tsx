@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
+type GameResult = "win" | "lose" | "stalemate" | null;
+
 interface GameContextProps {
   diceValue: number | null;
   diceRollId: number;
@@ -16,7 +18,9 @@ interface GameContextProps {
   addScore: (amount: number) => void;
   resetScore: () => void;
 
-  
+  gameOver: GameResult;
+  turns: number;
+  setGameOver: (result: GameResult, turns: number) => void;
 }
 
 const GameContext = createContext<GameContextProps | undefined>(undefined);
@@ -27,9 +31,16 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [canRoll, setCanRoll] = useState(true);
   const [log, setLog] = useState<string[]>([]);
   const [score, setScore] = useState(0);
+  const [gameOver, setGameOverState] = useState<GameResult>(null);
+  const [turns, setTurns] = useState(0);
 
   const addScore = (amount: number) => setScore((prev) => prev + amount);
   const resetScore = () => setScore(0);
+
+  const setGameOver = (result: GameResult, finalTurns: number) => {
+    setGameOverState(result);
+    setTurns(finalTurns);
+  };
 
   const rollDice = () => {
     if (!canRoll) return 0;
@@ -38,6 +49,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     setCanRoll(false);
     setDiceRollId((prev) => prev + 1);
     addLog(`Кубик брошен...`);
+    
     return value;
   };
 
@@ -59,6 +71,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         score,
         addScore,
         resetScore,
+        gameOver,
+        turns,
+        setGameOver,
       }}
     >
       {children}

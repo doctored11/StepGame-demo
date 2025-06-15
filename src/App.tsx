@@ -4,6 +4,7 @@ import { GameProvider } from "./context/GameContext";
 import { UI } from "./components/UI";
 import { GameSceneContext } from "./context/GameSceneContext";
 import { GameScene } from "./scenes/GameScene";
+import { GameOver } from "./components/GameOver";
 
 export default function App() {
   const gameSceneRef = useRef<GameScene | null>(null);
@@ -12,6 +13,7 @@ export default function App() {
     <GameSceneContext.Provider value={gameSceneRef}>
       <GameProvider>
         <ThreeCanvas gameSceneRef={gameSceneRef} />
+        <GameOver />
         <UI />
       </GameProvider>
     </GameSceneContext.Provider>

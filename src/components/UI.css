@@ -1,0 +1,59 @@
+* {
+  box-sizing: border-box;
+}
+.ui-panel {
+  position: fixed;
+  z-index: 5;
+  right: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  width: 200px;
+  padding: 20px;
+  background: #1e1e1e;
+  color: white;
+  font-family: sans-serif;
+  gap: 1rem;
+  border-left: 2px solid #444;
+  height: 100vh;
+}
+
+.ui-button {
+  padding: 0.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.ui-button:disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+
+.ui-stats {
+  margin: 0;
+}
+
+.ui-log {
+  background: #222;
+
+  border-radius: 0.25rem;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.ui-log-entry {
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  color: #b5b5b5;
+}
+
+.ui-log-entry:nth-child(2n-1) {
+  background-color: #2a2a2a;
+}
+
+.ui-log-entry:nth-child(2n) {
+  background-color: #1c1c1c;
+}
