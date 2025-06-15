@@ -47,16 +47,12 @@ export class BlueEnemy extends Enemy {
     }
 
     console.log("\n [ХОД синего]");
-    console.log(`🟦 синий начинает на тайле: ${current.id}`);
-    console.log(`😊 игрок стоит на тайле: ${playerTile.id}`);
-    console.log(`🍓 Ягода на тайле:  ${berryTile.id}`);
 
     const pathToPlayer = findPath(current, playerTile, gm, {
       allowEndOnBlocked: true,
     });
 
     const pathToPlayerIds = pathToPlayer.map((t) => t.id);
-    console.log(` 🗡️ Путь до игрока: ${pathToPlayerIds.join(" → ")}`);
 
     if (pathToPlayer.length === 0) {
       console.log(`⚔️ синий уже на тайле игрока`);
@@ -78,7 +74,6 @@ export class BlueEnemy extends Enemy {
 
     const playerToBerry = findPath(playerTile, berryTile, gm);
     const playerPathIds = playerToBerry.map((t) => t.id);
-    console.log(`👣 Путь игрока к ягоде: ${playerPathIds.join(" → ")}`);
 
     if (playerToBerry.length === 0) {
       console.log("❌ Игрок не может добраться до ягоды.");
@@ -90,19 +85,17 @@ export class BlueEnemy extends Enemy {
     console.log(`🎯 Целевой тайл  : ${midTile.id}`);
 
     if (midTile === current) {
-      console.log("🌀 синий уже стоит на целевом тайле.");
-      
       await this.moveRandomly(gm, playerTile);
       return;
     }
 
     const pathToMid = findPath(current, midTile, gm, {
+      exactSteps: 2,
       blockedTiles: new Set([playerTile]),
       allowEndOnBlocked: false,
     });
 
     const pathToMidIds = pathToMid.map((t) => t.id);
-    console.log(`🚶 Путь синиго к цели: ${pathToMidIds.join(" → ")}`);
 
     if (pathToMid.length === 0) {
       console.log("❌синий не может добраться до цели.");
@@ -129,9 +122,6 @@ export class BlueEnemy extends Enemy {
     }
 
     if (steps.length > 0) {
-      console.log(
-        `➡️ синий делает шаги : ${steps.map((t) => t.id).join(" → ")}`
-      );
       await this.moveAlongTiles(steps);
       this.currentTile = steps[steps.length - 1];
       console.log(`✅ синий теперь на тайле: ${this.currentTile.id}`);

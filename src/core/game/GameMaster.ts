@@ -7,7 +7,6 @@ import { findPath, findReachableTiles, PathfinderOptions } from "./Pathfinder";
 
 export type GameResult = "win" | "lose" | "stalemate" | null;
 
-
 export class GameMaster {
   private reachableTiles: Set<Tile> = new Set();
   private isTurnInProgress: boolean = false;
@@ -18,6 +17,7 @@ export class GameMaster {
 
   private score = 0;
   private turns = 0;
+  private stepsRemaining: number = 0;
 
   public enemies: Enemy[] = [];
 
@@ -51,12 +51,14 @@ export class GameMaster {
     }
 
     const diceValue = this.currentDiceValue;
+    this.stepsRemaining = diceValue || 0;
+
     if (diceValue === null) {
       this.reachableTiles.clear();
       this.onReachablesChanged([]);
       return;
     }
-    
+
     console.warn(diceValue);
 
     const blocked = new Set<Tile>(this.enemies.map((e) => e.currentTile));
@@ -98,36 +100,6 @@ export class GameMaster {
     this.onGameOver(result, score, turns);
   }
 
-  // BFS -todo вынести в утилиты
-  // public findReachableTiles(startTile: Tile, maxSteps: number): Tile[] {
-  //   const visited = new Set<Tile>();
-  //   const queue: Array<{ tile: Tile; steps: number }> = [
-  //     { tile: startTile, steps: 0 },
-  //   ];
-  //   const result: Tile[] = [];
-
-  //   while (queue.length > 0) {
-  //     const { tile, steps } = queue.shift()!;
-  //     if (steps > maxSteps) continue;
-
-  //     if (steps === maxSteps) {
-  //       result.push(tile);
-  //       continue;
-  //     }
-
-  //     for (const neighborId of tile.neighbors) {
-  //       const neighbor = this.gameMap.getTileById(neighborId);
-  //       if (neighbor && !visited.has(neighbor)) {
-  //         visited.add(neighbor);
-  //         queue.push({ tile: neighbor, steps: steps + 1 });
-  //       }
-  //     }
-  //   }
-  //   // console.log("🐣 ", result);
-
-  //   return result.filter((t) => t !== startTile); //да костыль - при выбросе именно 2 был ход под себя
-  // }
-
   public canMoveTo(tile: Tile): boolean {
     return this.reachableTiles.has(tile);
   }
@@ -148,6 +120,7 @@ export class GameMaster {
     this.isTurnInProgress = false;
     const blocked = new Set<Tile>(this.enemies.map((e) => e.currentTile));
     const path = findPath(this.player.currentTile, tile, this.gameMap, {
+      exactSteps: this.stepsRemaining,
       blockedTiles: blocked,
       allowEndOnBlocked: false,
     });

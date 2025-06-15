@@ -11,7 +11,7 @@ export class RedEnemy extends Enemy {
       this.currentTile,
       master.getPlayer().currentTile,
       master.getGameMap(),
-      { blockedTiles: blockedForEnemies, allowEndOnBlocked: true }
+      {  exactSteps: 1, blockedTiles: blockedForEnemies, allowEndOnBlocked: true }
     );
     let next = full[0];
     if (!next) {
