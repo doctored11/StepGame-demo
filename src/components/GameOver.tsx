@@ -16,10 +16,10 @@ export const GameOver: React.FC = () => {
 
     const url =
       gameOver === "win"
-        ? "/assets/models/player_1.glb"
+        ? "./assets/models/player_1.glb"
         : gameOver === "lose"
-        ? "/assets/models/red_1.glb"
-        : "/assets/models/dice.glb";
+        ? "./assets/models/red_1.glb"
+        : "./assets/models/dice.glb";
 
     endScene.loadAndPlay(url);
 

@@ -118,11 +118,11 @@ export class GameScene {
   }
 
   private async initializeAsync() {
-    await this.tileFactory.loadAll("/assets/models/tiles/");
+    await this.tileFactory.loadAll("./assets/models/tiles/");
     await this.PrefabFactory.loadAll([
-      "/assets/models/berry_1.glb",
-      "/assets/models/berry_2.glb",
-      "/assets/models/berry_3.glb",
+      "./assets/models/berry_1.glb",
+      "./assets/models/berry_2.glb",
+      "./assets/models/berry_3.glb",
     ]);
 
     this.gameMap = new GameMap(
@@ -141,8 +141,8 @@ export class GameScene {
 
     //todo адекватно заренеймить
     const playerFrames = await this.PrefabFactory.loadMultipleGLBs([
-      "/assets/models/player_1.glb",
-      "/assets/models/player_2.glb",
+      "./assets/models/player_1.glb",
+      "./assets/models/player_2.glb",
     ]);
     this.player = new Player(startTile, playerFrames);
     this.scene.add(this.player.getObject3D());
@@ -195,8 +195,8 @@ export class GameScene {
     );
 
     const redEnemyFrames = await this.PrefabFactory.loadMultipleGLBs([
-      "/assets/models/red_1.glb",
-      "/assets/models/red_2.glb",
+      "./assets/models/red_1.glb",
+      "./assets/models/red_2.glb",
     ]);
     const redStartTile = this.gameMap.getTileById(5)!; //todo порандомить 5
 
@@ -216,8 +216,8 @@ export class GameScene {
 
   private async spawnBlueEnemy() {
     const blueFrames = await this.PrefabFactory.loadMultipleGLBs([
-      "/assets/models/blue_1.glb",
-      "/assets/models/blue_2.glb",
+      "./assets/models/blue_1.glb",
+      "./assets/models/blue_2.glb",
     ]);
 
     let free = this.gameMap
