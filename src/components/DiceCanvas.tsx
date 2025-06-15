@@ -17,7 +17,7 @@ export const DiceCanvas: React.FC<DiceCanvasProps> = ({ onRollComplete }) => {
     const rollScene = new RollScene(canvasRef.current);
     sceneRef.current = rollScene;
 
-    rollScene.loadDiceModel("/assets/models/dice.glb");
+    rollScene.loadDiceModel("./assets/models/dice.glb");
 
     return () => {
     };
